@@ -1,2 +1,0 @@
-SQL_USER = ""
-SQL_PASSWORD = ""
