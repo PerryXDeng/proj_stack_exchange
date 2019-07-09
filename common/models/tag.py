@@ -1,3 +1,5 @@
+from __future__ import annotations
+from xml.etree.ElementTree import Element
 
 class Tag:
     def __init__(self, id, count, name):
@@ -9,26 +11,5 @@ class Tag:
        return  f"tag: {{id : {self.id} , count : {self.count} , name : {self.name}}}"
     
     @staticmethod
-    def parseTagXML(filename):
-        pass
-        # public
-        # static
-        # ArrayList < Tag > parseTagXML(String
-        # filename){
-        #     ArrayList < Tag > tags = new
-        # ArrayList <> ();
-        # NodeList
-        # rows = XMLParserUtilities.getRows(filename);
-        # for (int row = 0; row < rows.getLength(); row++){
-        # Node current = rows.item(row);
-        # if (current.getNodeType() == Node.ELEMENT_NODE){
-        # Element tag = (Element) current;
-        # tags.add(new Tag(
-        # Integer.parseInt(tag.getAttribute("Id")),
-        # Integer.parseInt(tag.getAttribute("Count")),
-        # tag.getAttribute("TagName")
-        # ));
-        # }
-        # }
-        # return tags;
-        # }
+    def parseTagXMLNode(node: Element):
+        return Tag(int(node.get("Id")), int(node.get("Count")), node.get("TagName"))
