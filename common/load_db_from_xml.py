@@ -1,14 +1,15 @@
 from common.xml_parser_utilties import XMLParserUtilies
 # for finding files
 import glob
-from pathlib import Path
+from pathlib import Path, PurePath
+import os
 # for type hinting
 import typing
 
 # have this be the directory that contains the site folders of the xmls
 # don't put the data in the repo
 WINDOWS = False
-RAW_DATA_DIR = r"/home/pxd256/Downloads/stackexchange/"
+RAW_DATA_DIR = r"C:\Users\railcomm\Desktop\data\\"
 if WINDOWS:
     RAW_DATA_DIR = Path(RAW_DATA_DIR)
 
@@ -19,7 +20,7 @@ def get_folder_site(folder_path:str) -> str:
     :param folder_path: path to folder
     :return: name of site
     """
-    return folder_path.split('/')[-2]
+    return PurePath(folder_path).parts[-1]
 
 
 def index_site_folders() -> typing.Dict[str, int]:
@@ -46,7 +47,7 @@ def index_site_xmls(site_id_map:typing.Dict[str, int]) -> typing.Set[typing.Tupl
     xmls = set()
     xml_paths = glob.glob(RAW_DATA_DIR + "*/*.xml")
     for xml_path in xml_paths:
-        path_fields = xml_path.split('/')
+        path_fields = PurePath(xml_path).parts
         site = path_fields[-2]
         site_id = site_id_map[site]
         xmls.add((site_id, xml_path))
