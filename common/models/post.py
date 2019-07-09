@@ -28,16 +28,16 @@ class Post:
         body = node.get("Body")
         date = node.get("CreationDate")
 
-        ownerUserId = -1 if node.get("OwnerUserId") == None else int(node.get("OwnerUserId"))
+        ownerUserId = None if node.get("OwnerUserId") == None else int(node.get("OwnerUserId"))
 
         if isQuestion:
-            acceptedId = -1 if node.get("AcceptedAnswerId") == None else int(node.get("AcceptedAnswerId"))
+            acceptedId = None if node.get("AcceptedAnswerId") == None else int(node.get("AcceptedAnswerId"))
             tags = node.get("Tags").split("><")
             tags[0] = tags[0][1:]
             tags[-1] = tags[-1][:-1]
             return Question(id, site_id, date, score, title, body, ownerUserId, acceptedId, tags)
         else:
-            questionId = -1 if node.get("ParentId") == None else int(node.get("ParentId"))
+            questionId = None if node.get("ParentId") == None else int(node.get("ParentId"))
             return Answer(id, site_id, date, score, title, body, ownerUserId, questionId)
 
 class Question(Post):

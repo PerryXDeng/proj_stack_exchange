@@ -2,7 +2,7 @@ from __future__ import annotations
 from xml.etree.ElementTree import Element
 
 class User:
-    def __init__(self, id: int, site_id: int, ts: str, name: str, rep: int):
+    def __init__(self, id: int, ts: str, name: str, rep: int):
         self.id = id
         self.ts = ts
         self.name = name
