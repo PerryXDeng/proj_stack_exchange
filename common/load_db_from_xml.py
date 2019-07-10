@@ -9,6 +9,7 @@ from common.models.user import User
 from common.models.post import Post, Question, Answer
 from common.models.tag import Tag
 from common.models.comment import Comment
+from multiprocessing import Pool
 
 import pymysql.cursors
 from creds import USERNAME, PASSWORD
@@ -16,7 +17,7 @@ from creds import USERNAME, PASSWORD
 # have this be the directory that contains the site folders of the xmls
 # don't put the data in the repo
 WINDOWS = False
-RAW_DATA_DIR = r"C:\Users\themo\Desktop\test\\"
+RAW_DATA_DIR = r"F:\Big Data\data\\"
 if WINDOWS:
     RAW_DATA_DIR = Path(RAW_DATA_DIR)
 BUFFER_SIZE = 100000
@@ -74,23 +75,18 @@ def test_file_paths_indexing():
     for el in xmls:
         print("Site ID: %d, File Path: %s" % (el[0], el[1]))
 
-def main():
-    site_id_map, id_site_map = index_site_folders()
-    xmls = index_site_xmls(site_id_map)
-
-    site_count = max(xmls, key=lambda x: x[0])[0] + 1
-
-    connection = pymysql.connect(host='localhost',
-                                 user=USERNAME,
-                                 password=PASSWORD,
-                                 db="main",
-                                 charset='utf8mb4',
-                                 cursorclass=pymysql.cursors.DictCursor)
-    with connection.cursor() as cursor:
-        for local_site_id in range(site_count):
+def upload_site(local_site_id, site_name, xmls):
+    try:
+        connection = pymysql.connect(host='localhost',
+                                     user=USERNAME,
+                                     password=PASSWORD,
+                                     db="main",
+                                     charset='utf8mb4',
+                                     cursorclass=pymysql.cursors.DictCursor)
+        with connection.cursor() as cursor:
             site_insert_sql = "INSERT IGNORE INTO `site` (`name`) VALUES (%s)"
             # site_select_sql = "SELECT `siteId` FROM `site` WHERE `name` = %s"
-            cursor.execute(site_insert_sql, id_site_map[local_site_id])
+            cursor.execute(site_insert_sql, site_name)
             remote_site_id = cursor.lastrowid
 
             # Delete all tables order
@@ -136,13 +132,13 @@ def main():
             # siteId > 0;
 
             if remote_site_id == 0:
-                print(f"Site '{id_site_map[local_site_id]}' has already been added or partially added!")
-                continue
+                print(f"Site '{site_name}' has already been added or partially added!")
+                return
             connection.commit()
 
             buffer = []
 
-            print(f"Adding users from Site '{id_site_map[local_site_id]}'")
+            print(f"Adding users from Site '{site_name}'")
             # Users
             users_xml_file = list(filter(lambda x: "Users.xml" in x[1] and x[0] == local_site_id, xmls))[0][1]
             user_insert_sql = "INSERT IGNORE INTO `user` (`id`, `siteId`, `username`, `reputation`, `created`) VALUES (%s, %s, %s, %s, %s)"
@@ -150,8 +146,8 @@ def main():
             for row in XMLParserUtilies.getRows(users_xml_file):
                 buffer.append(User.parseUserXMLNode(row))
 
-                if(len(buffer)) >= BUFFER_SIZE:
-                    cursor.executemany(user_insert_sql,  map(user_data_lambda, buffer))
+                if (len(buffer)) >= BUFFER_SIZE:
+                    cursor.executemany(user_insert_sql, map(user_data_lambda, buffer))
                     buffer = []
             if len(buffer) > 0:
                 cursor.executemany(user_insert_sql, map(user_data_lambda, buffer))
@@ -159,7 +155,7 @@ def main():
             connection.commit()
 
             # Tags
-            print(f"Adding tags from Site '{id_site_map[local_site_id]}'")
+            print(f"Adding tags from Site '{site_name}'")
             u_tag_id_map: Dict[str, int] = {}
             tag_insert_sql = "INSERT IGNORE INTO `tag` (`tagId`, `name`, `count`) VALUES (%s, %s, %s)"
             tag_data_lambda: Callable[[Tag], Tuple] = lambda tag: (tag.id, tag.name, tag.count)
@@ -181,7 +177,7 @@ def main():
             connection.commit()
 
             # Posts
-            print(f"Adding posts from Site '{id_site_map[local_site_id]}'")
+            print(f"Adding posts from Site '{site_name}'")
             post_counter = 0
             post_id_map = {}
             posts_xml_file = list(filter(lambda x: "Posts.xml" in x[1] and x[0] == local_site_id, xmls))[0][1]
@@ -194,7 +190,8 @@ def main():
 
             for row in XMLParserUtilies.getRows(posts_xml_file):
                 post: Union[Question, Answer] = Post.parsePostXMLNode(row, remote_site_id)
-                post_buffer.append((post.id, post.date_created, post.score, post.title, post.owner_id, post.site_id, post.body))
+                post_buffer.append(
+                    (post.id, post.date_created, post.score, post.title, post.owner_id, post.site_id, post.body))
 
                 if type(post) is Question:
                     tag_buffer.append(post.tags)
@@ -202,7 +199,8 @@ def main():
                     tag_buffer.append([])
 
                 if len(post_buffer) >= BUFFER_SIZE:
-                    cursor.executemany(post_insert_sql, post_buffer)
+                    res = cursor.executemany(post_insert_sql, post_buffer)
+                    print(res)
                     for i in range(len(post_buffer)):
                         u_postId = cursor.lastrowid - len(post_buffer) + i + 1
                         post_id_map[post_buffer[i][0]] = u_postId
@@ -212,7 +210,7 @@ def main():
                     connection.commit()
                     post_buffer = []
                     describes_buffer = []
-                    tag_buffer=[]
+                    tag_buffer = []
             if len(post_buffer) > 0 or len(describes_buffer) > 0:
                 cursor.executemany(post_insert_sql, post_buffer)
                 for i in range(len(post_buffer)):
@@ -229,7 +227,7 @@ def main():
             # Posts round 2
             answer_buffer = []
             question_buffer = []
-            print(f"Adding qs & as '{id_site_map[local_site_id]}'")
+            print(f"Adding qs & as '{site_name}'")
             answer_insert_sql = "INSERT IGNORE INTO `answer` (`u_postId`, `questionId`) VALUES (%s, %s)"
             question_insert_sql = "INSERT IGNORE INTO `question` (`u_postId`, `acceptedId`) VALUES (%s, %s)"
             for row in XMLParserUtilies.getRows(posts_xml_file):
@@ -237,10 +235,10 @@ def main():
 
                 if type(post) is Question:
                     question_buffer.append((post_id_map[post.id],
-                                            None if post.acceptedId == None else post_id_map[post.acceptedId]))
+                                            None if post.acceptedId == None or post.acceptedId not in post_id_map else post_id_map[post.acceptedId]))
                 else:
                     answer_buffer.append((post_id_map[post.id],
-                                          None if post.questionId == None else post_id_map[post.questionId]))
+                                          None if post.questionId == None or post.questionId not in post_id_map else post_id_map[post.questionId]))
 
                 if len(question_buffer) >= BUFFER_SIZE or len(answer_buffer) >= BUFFER_SIZE:
                     cursor.executemany(question_insert_sql, question_buffer)
@@ -259,11 +257,13 @@ def main():
                 question_buffer = []
 
             # Comments
-            print(f"Adding comments from Site '{id_site_map[local_site_id]}'")
+            print(f"Adding comments from Site '{site_name}'")
             comments_xml_file = list(filter(lambda x: "Comments.xml" in x[1] and x[0] == local_site_id, xmls))[0][1]
             comment_insert_sql = "INSERT IGNORE INTO `comment` (`id`, `score`, `body`, `created`, `userId`, `siteId`, `u_postId`) VALUES (%s, %s, %s, %s, %s, %s, %s)"
             comment_data_lambda: Callable[[Comment], Tuple] = \
-                lambda comment: (comment.id, comment.score, comment.body, comment.date_created, comment.user_id, remote_site_id, post_id_map[comment.post_id])
+                lambda comment: (
+                comment.id, comment.score, comment.body, comment.date_created, comment.user_id, remote_site_id,
+                post_id_map[comment.post_id])
             for row in XMLParserUtilies.getRows(comments_xml_file):
                 buffer.append(Comment.parseCommentXMLNode(row))
 
@@ -274,6 +274,21 @@ def main():
                 cursor.executemany(comment_insert_sql, map(comment_data_lambda, buffer))
                 buffer = []
             connection.commit()
+    except Exception as ex:
+        print(site_name, "failed!")
+        print(str(ex))
+        raise ex
+    print(site_name, "succeeded!")
+
+def main():
+    site_id_map, id_site_map = index_site_folders()
+    xmls = index_site_xmls(site_id_map)
+
+    site_count = max(xmls, key=lambda x: x[0])[0] + 1
+
+    pool = Pool(processes=1) #Careful with this can lead to mysql deadlock
+    arg_list = [(local_site_id, id_site_map[local_site_id], xmls) for local_site_id in range(site_count)]
+    pool.starmap(upload_site, arg_list)
 
 
 if __name__ == '__main__':
