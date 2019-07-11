@@ -9,7 +9,7 @@ import typing
 # have this be the directory that contains the site folders of the xmls
 # don't put the data in the repo
 WINDOWS = False
-RAW_DATA_DIR = r"C:\Users\railcomm\Desktop\data\\"
+RAW_DATA_DIR = renderer"C:\Users\railcomm\Desktop\data\\"
 if WINDOWS:
     RAW_DATA_DIR = Path(RAW_DATA_DIR)
 
@@ -71,7 +71,7 @@ def main():
         # Users
         # Posts
         # Tags
-    # for row in XMLParserUtilies.getRows(r"F:\Big Data\askubuntu.com\PostHistory.xml"):
+    # for row in XMLParserUtilies.getRows(renderer"F:\Big Data\askubuntu.com\PostHistory.xml"):
         # print(row)
     test_file_paths_indexing()
 
