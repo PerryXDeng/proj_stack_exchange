@@ -17,7 +17,7 @@ from creds import USERNAME, PASSWORD
 # have this be the directory that contains the site folders of the xmls
 # don't put the data in the repo
 WINDOWS = False
-RAW_DATA_DIR = r"F:\Big Data\data\\"
+RAW_DATA_DIR = r"/home/pxd256/Downloads/stackexchange/"
 if WINDOWS:
     RAW_DATA_DIR = Path(RAW_DATA_DIR)
 BUFFER_SIZE = 100000
@@ -281,15 +281,6 @@ def upload_site(local_site_id, site_name, xmls):
     print(site_name, "succeeded!")
 
 def main():
-<<<<<<< HEAD
-    # for site
-        # Users
-        # Posts
-        # Tags
-    # for row in XMLParserUtilies.getRows(renderer"F:\Big Data\askubuntu.com\PostHistory.xml"):
-        # print(row)
-    test_file_paths_indexing()
-=======
     site_id_map, id_site_map = index_site_folders()
     xmls = index_site_xmls(site_id_map)
 
@@ -298,7 +289,6 @@ def main():
     pool = Pool(processes=1) #Careful with this can lead to mysql deadlock
     arg_list = [(local_site_id, id_site_map[local_site_id], xmls) for local_site_id in range(site_count)]
     pool.starmap(upload_site, arg_list)
->>>>>>> 12928a02fe3a84814e69bdd40b23e65af3c26852
 
 
 if __name__ == '__main__':
