@@ -9,6 +9,9 @@ Database Proxy
 Creds
 Add username and password to the creds.py file
 
+Need to give credentials file as well somehow
+and the server name
+
 
 ######################
 Spark
@@ -19,13 +22,13 @@ Download hadoop: https://github.com/steveloughran/winutils/tree/master/hadoop-2.
 
 Download Scala: https://www.scala-lang.org/download/
 
-Download a driver for MYSQL: https://dev.mysql.com/downloads/connector/j/  (thanks Drew)
+Download a driver for MYSQL: https://dev.mysql.com/downloads/connector/j/
 
 Install jupyter notebook packages for python if you don't already have them setup.
 
 There is also a dependency on JDK 8 (spark appears to use a jdbc on the backend)
 
-Here are the environent variables that are necessary on  windows (they might differ slightly for linux, but are likely very similar)
+Here are the environent variables that are necessary on windows (they might differ slightly for linux, but are likely very similar)
 
 HADOOP_HOME - the path  to the  hadoop binaries
 
@@ -40,3 +43,4 @@ PYSPARK_PYTHON - the path to your python executable PYSPARK_DRIVER_PYTHON - the 
 you  can test if this all  worked by typing spark-shell or pyspark (which will launch the notebook)
 
 if you wan't to test a connection to our database, make sure to launch with the arguments --driver-class-path <PATH TO MYSQL CONNECTOR JAR> --jars <PATH TO MYSQL CONNECTOR JAR>
+
