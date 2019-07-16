@@ -20,13 +20,13 @@ Download hadoop: https://github.com/steveloughran/winutils/tree/master/hadoop-2.
 
 Download Scala: https://www.scala-lang.org/download/
 
-Download a driver for MYSQL: https://dev.mysql.com/downloads/connector/j/  (thanks Drew)
+Download a driver for MYSQL: https://dev.mysql.com/downloads/connector/j/
 
 Install jupyter notebook packages for python if you don't already have them setup.
 
 There is also a dependency on JDK 8 (spark appears to use a jdbc on the backend)
 
-Here are the environent variables that are necessary on  windows (they might differ slightly for linux, but are likely very similar)
+Here are the environent variables that are necessary on windows (they might differ slightly for linux, but are likely very similar)
 
 HADOOP_HOME - the path  to the  hadoop binaries
 
