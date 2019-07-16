@@ -8,7 +8,8 @@ Database Proxy
 
 Creds
 Add username and password to the creds.py file
-
+Need to give credentials file as well somehow
+and the server name
 
 ######################
 Spark
