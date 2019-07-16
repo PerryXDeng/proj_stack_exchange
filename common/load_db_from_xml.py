@@ -5,12 +5,15 @@ from pathlib import Path, PurePath
 import os
 # for type hinting
 from typing import Dict, Tuple, Set, Callable, Union, List
+
+
 from common.models.user import User
 from common.models.post import Post, Question, Answer
 from common.models.tag import Tag
 from common.models.comment import Comment
 from multiprocessing import Pool
 import uuid
+
 
 import pymysql.cursors
 from creds import USERNAME, PASSWORD
@@ -19,9 +22,11 @@ from creds import USERNAME, PASSWORD
 # don't put the data in the repo
 WINDOWS = False
 RAW_DATA_DIR = r"F:\Big Data\data\\"
+
 if WINDOWS:
     RAW_DATA_DIR = Path(RAW_DATA_DIR)
 BUFFER_SIZE = 100000
+
 
 def list_insert_helper(array: List, i, data):
     if len(array) <= i:
@@ -102,12 +107,14 @@ def upload_site(local_site_id, site_name, xmls):
             remote_site_id = cursor.lastrowid
 
             # if the statement did not insert anything warn the user and stop
+
             if remote_site_id == 0:
                 print(f"Site '{site_name}' has already been added or partially added!")
                 return
             connection.commit()
-
+            
             # create buffer for storing user data to use multiple insert
+
             buffer = []
 
             print(f"Adding users from Site '{site_name}'")
@@ -153,6 +160,7 @@ def upload_site(local_site_id, site_name, xmls):
                 for i in range(len(buffer)):
                     # store id of tag in tag map
                     u_tag_id_map[buffer[i].name] = buffer[i].uuid
+
                 buffer = []
             connection.commit()
 
@@ -163,7 +171,6 @@ def upload_site(local_site_id, site_name, xmls):
             posts_xml_file = list(filter(lambda x: "Posts.xml" in x[1] and x[0] == local_site_id, xmls))[0][1]
             post_insert_sql = "INSERT IGNORE INTO `post` (`u_postId`, `postId`, `created`, `score`, `title`, `userId`, `siteId`, `body`) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
             describes_insert_sql = "INSERT IGNORE INTO `describes` (`u_postId`, `u_tagId`) VALUES (%s, %s)"
-
             post_buffer = []
             describes_buffer = []
             tag_buffer = []
@@ -171,6 +178,7 @@ def upload_site(local_site_id, site_name, xmls):
             for row in XMLParserUtilies.getRows(posts_xml_file):
                 post: Union[Question, Answer] = Post.parsePostXMLNode(row, remote_site_id)
                 post_buffer.append(
+
                     (get_random_id(), post.id, post.date_created, post.score, post.title, post.owner_id, post.site_id, post.body))
 
                 # store tag id for insertion into describes later

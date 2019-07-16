@@ -1,4 +1,3 @@
-from __future__ import annotations
 from xml.etree.ElementTree import Element
 from typing import Dict, Union
 
@@ -18,7 +17,7 @@ class Post:
             f'owner:{self.owner_id}'
 
     @staticmethod
-    def parsePostXMLNode(node: Element, site_id: int) -> Union[Question, Answer]:
+    def parsePostXMLNode(node: Element, site_id: int):
         pass
         isQuestion = node.get("PostTypeId") == "1"
 
