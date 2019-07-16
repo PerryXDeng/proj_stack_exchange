@@ -1,8 +1,13 @@
 from __future__ import annotations
 from xml.etree.ElementTree import Element
+import uuid
+
+def get_random_id():
+    return uuid.uuid4().int & (1 << 64) - 1
 
 class Tag:
-    def __init__(self, id, count, name):
+    def __init__(self, uuid, id, count, name):
+        self.uuid = uuid
         self.id = id
         self.count = count
         self.name = name
@@ -12,4 +17,4 @@ class Tag:
     
     @staticmethod
     def parseTagXMLNode(node: Element):
-        return Tag(int(node.get("Id")), int(node.get("Count")), node.get("TagName"))
+        return Tag(get_random_id(), int(node.get("Id")), int(node.get("Count")), node.get("TagName"))
