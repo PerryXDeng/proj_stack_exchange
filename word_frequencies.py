@@ -51,15 +51,16 @@ def sum_word_count(df):
   :return: a spark data frame containing rows of (word:string, count:int)
   """
   return df.withColumn('word', functions.explode(functions.split(functions.column('body'), ' ')))\
-      .groupBy('word')\
-      .count()\
-      .sort('count', ascending=False)
+      .groupBy('siteId', 'word')\
+      .count()#\
+      #.sort('count', ascending=False) # no need for sorting the results here
 
 
 def main():
   posts = get_post_site_text("2018-03-15", "2018-03-16")
   counts = sum_word_count(posts)
-  counts.show()
+  counts.show(500)
+  # execute_query("SELECT siteId FROM main2.site").show(500)
 
 
 main()
