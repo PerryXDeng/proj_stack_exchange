@@ -2,6 +2,7 @@ from pyspark.sql import SparkSession, SQLContext, functions
 from creds import USERNAME as UNAME
 from creds import PASSWORD as PASS
 from datetime import datetime, timedelta
+import quinn
 
 
 SCHEMA = "main_v2"
@@ -17,7 +18,7 @@ spark = SparkSession \
 
 sc = spark.sparkContext
 sql_context = SQLContext(sc)
-sc.setLogLevel("INFO")
+sc.setLogLevel("WARN")
 
 
 def execute_query(sql_query):
@@ -81,6 +82,20 @@ def get_last_post_time(condition=""):
   return execute_query(query)
 
 
+def spark_function_clean_string(spark_column):
+  """
+  preprocess a string column
+  :param spark_column: spark column
+  :return: spark function
+  """
+  # remove non alphabets/whitespaces
+  f = functions.regexp_replace(spark_column, "[^\\w\\s]+", "")
+  # remove multiple whitespaces
+  f = functions.trim(functions.regexp_replace(f, "[ \n]+", " "))
+  # all lower case
+  f = functions.lower(f)
+  return f
+
 def sum_word_counts(df):
   """
   method names explains itself
@@ -88,7 +103,8 @@ def sum_word_counts(df):
   :param df: a spark data frame, should contain attribute "body" for post bodies
   :return: a spark data frame containing rows of (word:string, count:int)
   """
-  return df.withColumn('word', functions.explode(functions.split(functions.lower(functions.column('body')), ' ')))\
+  return df.withColumn('word', functions.explode(functions.split(
+      spark_function_clean_string(functions.column('body')), ' ')))\
       .groupBy('siteId', 'word')\
       .count()\
       .sort('count', ascending=False) # no need for sorting the results here
@@ -113,7 +129,7 @@ def main():
   counts_1 = sum_word_counts(get_post_site_text(offset_time_string(start_date), offset_time_string(end_date)))
   counts_2 = sum_word_counts(get_post_site_text(offset_time_string(start_date + timedelta(days=1)), offset_time_string(end_date + timedelta(days=1))))
   counts = reduce_word_counts(counts_1, counts_2)
-  counts.show()
+  counts.show(truncate=False)
   #get_first_post_time().show()
 
 
