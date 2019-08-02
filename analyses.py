@@ -2,7 +2,6 @@ from pyspark.sql import SparkSession, SQLContext, functions
 from creds import USERNAME as UNAME
 from creds import PASSWORD as PASS
 from datetime import datetime, timedelta
-import quinn
 
 
 SCHEMA = "main_v2"
@@ -91,7 +90,7 @@ def spark_function_clean_string(spark_column):
   # remove non alphabets/whitespaces
   f = functions.regexp_replace(spark_column, "[^\\w\\s]+", "")
   # remove multiple whitespaces
-  f = functions.trim(functions.regexp_replace(f, "[ \n]+", " "))
+  f = functions.trim(functions.regexp_replace(f, "[ \n\t]+", " "))
   # all lower case
   f = functions.lower(f)
   return f
