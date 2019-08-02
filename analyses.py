@@ -2,6 +2,8 @@ from pyspark.sql import SparkSession, SQLContext, functions
 from creds import USERNAME as UNAME
 from creds import PASSWORD as PASS
 from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
+from dateutil.rrule import rrule, DAILY
 
 
 SCHEMA = "main_v2"
@@ -87,13 +89,16 @@ def spark_function_clean_string(spark_column):
   :param spark_column: spark column
   :return: spark function
   """
-  # remove non alphabets/whitespaces
-  f = functions.regexp_replace(spark_column, "[^\\w\\s]+", "")
+  # remove formatting and html entities
+  f = functions.regexp_replace(spark_column, "(<(.*)>)|(&(amp|lt|gt);)", " ")
+  # remove non alphabets/whitespaces and replace with whitespace
+  f = functions.regexp_replace(f, "[^\\w\\s]+", " ")
   # remove multiple whitespaces
-  f = functions.trim(functions.regexp_replace(f, "[ \n\t]+", " "))
+  f = functions.trim(functions.regexp_replace(f, "[ \n\t\r]+", " "))
   # all lower case
   f = functions.lower(f)
   return f
+
 
 def sum_word_counts(df):
   """
@@ -102,11 +107,11 @@ def sum_word_counts(df):
   :param df: a spark data frame, should contain attribute "body" for post bodies
   :return: a spark data frame containing rows of (word:string, count:int)
   """
-  return df.withColumn('word', functions.explode(functions.split(
-      spark_function_clean_string(functions.column('body')), ' ')))\
-      .groupBy('siteId', 'word')\
-      .count()\
-      .sort('count', ascending=False) # no need for sorting the results here
+  processed = df.withColumn('word', functions.explode(functions.split(
+      spark_function_clean_string(functions.column('body')), ' ')))
+  df.unpersist() # free memory
+  return processed.groupBy('siteId', 'word').count().filter(processed.word != "")
+
 
 def reduce_word_counts(df_1, df_2):
   """
@@ -117,19 +122,36 @@ def reduce_word_counts(df_1, df_2):
   :param df_2: second data frame
   :return: new combined data frame
   """
-  unioned = df_1.union(df_2)
-  return unioned.groupBy('siteId', 'word').agg(functions.sum('count')).withColumnRenamed('sum(count)','count')\
-      .sort('count', ascending=False) # no need for sorting the results here
+  if df_1 is None:
+    # for iteration zero when there is no existing df to merge with
+    return df_2
+  union = df_1.union(df_2)
+  df_1.unpersist()  # free memory
+  df_2.unpersist()  # free memory
+  return union.groupBy('siteId', 'word').agg(functions.sum('count')).withColumnRenamed('sum(count)','count')
+
+
+def word_count_for_month(date:datetime):
+  month_start = date.replace(day=1)
+  month_end = month_start + relativedelta(months=+1)
+  df = None
+  for day in rrule(DAILY, dtstart=month_start, until=month_end):
+    start = offset_time_string(day)
+    end = offset_time_string(day + timedelta(days=1))
+    df = reduce_word_counts(df, sum_word_counts(get_post_site_text(start, end)))
+  return df
 
 
 def main():
   start_date = datetime.strptime("2018-03-15", "%Y-%m-%d")
-  end_date = datetime.strptime("2018-03-16", "%Y-%m-%d")
-  counts_1 = sum_word_counts(get_post_site_text(offset_time_string(start_date), offset_time_string(end_date)))
-  counts_2 = sum_word_counts(get_post_site_text(offset_time_string(start_date + timedelta(days=1)), offset_time_string(end_date + timedelta(days=1))))
-  counts = reduce_word_counts(counts_1, counts_2)
-  counts.show(truncate=False)
-  #get_first_post_time().show()
+  # end_date = datetime.strptime("2018-03-16", "%Y-%m-%d")
+  # counts_1 = sum_word_counts(get_post_site_text(offset_time_string(start_date), offset_time_string(end_date)))
+  # counts_2 = sum_word_counts(get_post_site_text(offset_time_string(start_date + timedelta(days=1)), offset_time_string(end_date + timedelta(days=1))))
+  # counts = reduce_word_counts(counts_1, counts_2)
+  # counts.show(truncate=False)
+  month = word_count_for_month(start_date).sort('count', ascending=False)
+  month.show()
+  # get_first_post_time().show()
 
 
 main()
