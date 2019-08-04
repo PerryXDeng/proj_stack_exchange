@@ -2,10 +2,10 @@ from pyspark.sql import SparkSession, SQLContext, functions
 from creds import USERNAME as UNAME
 from creds import PASSWORD as PASS
 from datetime import datetime, timedelta
-
+from textblob import TextBlob
 
 SCHEMA = "main_v2"
-URL = "jdbc:mysql://localhost:3306/" + SCHEMA
+URL = "jdbc:mysql://localhost:3307/" + SCHEMA
 TIME_FMT = '{0:%Y-%m-%d %H:%M:%S}'
 
 
@@ -107,14 +107,22 @@ def reduce_word_counts(df_1, df_2):
       .sort('count', ascending=False) # no need for sorting the results here
 
 
+def perform_sentiment_analysis(start_date, end_date):
+    posts = get_post_site_text(start_date, end_date)
+    sentiment_values = posts.rdd.map(lambda x:  TextBlob(x.body).sentiment)
+    sentiment_values = sentiment_values.collect()
+    return sentiment_values
+
 def main():
-  start_date = datetime.strptime("2018-03-15", "%Y-%m-%d")
-  end_date = datetime.strptime("2018-03-16", "%Y-%m-%d")
-  counts_1 = sum_word_counts(get_post_site_text(offset_time_string(start_date), offset_time_string(end_date)))
-  counts_2 = sum_word_counts(get_post_site_text(offset_time_string(start_date + timedelta(days=1)), offset_time_string(end_date + timedelta(days=1))))
-  counts = reduce_word_counts(counts_1, counts_2)
-  counts.show()
-  #get_first_post_time().show()
+    start_date = datetime.strptime("2018-03-15", "%Y-%m-%d")
+    end_date = datetime.strptime("2018-03-16", "%Y-%m-%d")
+    perform_sentiment_analysis(offset_time_string(start_date), offset_time_string(end_date))
+
+  # counts_1 = sum_word_counts(get_post_site_text(offset_time_string(start_date), offset_time_string(end_date)))
+  # counts_2 = sum_word_counts(get_post_site_text(offset_time_string(start_date + timedelta(days=1)), offset_time_string(end_date + timedelta(days=1))))
+  # counts = reduce_word_counts(counts_1, counts_2)
+  # counts.show()
+  # #get_first_post_time().show()
 
 
 main()
