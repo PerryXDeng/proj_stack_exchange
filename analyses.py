@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 from dateutil.rrule import rrule, DAILY
 from nltk.corpus import stopwords
+from concurrent.futures import ThreadPoolExecutor
 
 SCHEMA = "main_v2"
 PERFORMANCE_PILL = "?useServerPrepStmts=false&rewriteBatchedStatements=true"
@@ -267,7 +268,20 @@ def sum_post_size_by_site(df):
   return summed
 
 
-def index_hourly_total_post_sizes(spark_session, sql_context, start_date, end_date):
+def index_hourly_post_sizes(spark_session, sql_context, start, hourly_offset):
+  current = start + relativedelta(hours=+hourly_offset)
+  print(current)
+  sizes = get_post_site_size(sql_context, offset_time_string(current), offset_time_string(current  + relativedelta(hours=+1)))
+  total_post_sizes = sum_post_size_by_site(sizes)
+  date_appended_sizes = total_post_sizes.withColumn("time", functions.lit(current - timedelta(hours=4)))
+  total_post_sizes.unpersist()
+  insert_df_to_table(date_appended_sizes, "hourly_post_sizes")
+  date_appended_sizes.unpersist()
+  spark_session.catalog.clearCache()
+  return
+
+
+def index_all_hourly_total_post_sizes(spark_session, sql_context, start_date, end_date):
   """
   method name explains itself
   :param spark_session: for freeing memory
@@ -279,16 +293,10 @@ def index_hourly_total_post_sizes(spark_session, sql_context, start_date, end_da
   diff = end_date - start_date
   days_apart, seconds_apart = diff.days, diff.seconds
   hours_apart = days_apart * 24 + seconds_apart // 3600
-  for n in range(hours_apart):
-    time = start_date + relativedelta(hours=+n)
-    print(time)
-    sizes = get_post_site_size(sql_context, offset_time_string(time), offset_time_string(time + relativedelta(hours=+1)))
-    total_post_sizes = sum_post_size_by_site(sizes)
-    date_appended_sizes = total_post_sizes.withColumn("time", functions.lit(time - timedelta(hours=4)))
-    total_post_sizes.unpersist()
-    insert_df_to_table(date_appended_sizes, "hourly_post_sizes")
-    date_appended_sizes.unpersist()
-    spark_session.catalog.clearCache()
+
+  with ThreadPoolExecutor(max_workers=50) as executor:
+    offsets = range(hours_apart)
+    [executor.submit(index_hourly_post_sizes, spark_session, sql_context, start_date, n) for n in offsets]
   return
 
 def main():
@@ -313,7 +321,7 @@ def main():
   # start_date = get_first_post_time(sql_context).collect()[0]['dateCreated'].replace(minute=0, second=0)
   end_date = get_last_post_time(sql_context).collect()[0]['dateCreated'].replace(minute=0, second=0)
   start_date = end_date + relativedelta(years=-1)
-  index_hourly_total_post_sizes(spark_session, sql_context, start_date, end_date)
+  index_all_hourly_total_post_sizes(spark_session, sql_context, start_date, end_date)
 
 
 if __name__ == "__main__":
