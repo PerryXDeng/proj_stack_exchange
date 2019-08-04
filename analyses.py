@@ -293,7 +293,7 @@ def index_all_hourly_total_post_sizes(spark_session, sql_context, start_date, en
   days_apart, seconds_apart = diff.days, diff.seconds
   hours_apart = days_apart * 24 + seconds_apart // 3600
 
-  with ThreadPoolExecutor(max_workers=50) as executor:
+  with ThreadPoolExecutor(max_workers=500) as executor:
     offsets = range(hours_apart)
     [executor.submit(index_hourly_post_sizes, sql_context, start_date, n) for n in offsets]
   return
@@ -305,8 +305,8 @@ def main():
     .config('spark.driver.extraClassPath', './mysql-connector-java-8.0.16.jar') \
     .config('spark.executor.memory', '450g') \
     .config('spark.driver.memory', '450g') \
-    .config('spark.executor.cores', '50') \
-    .config('spark.cores.max', '50') \
+    .config('spark.executor.cores', '45') \
+    .config('spark.cores.max', '45') \
     .getOrCreate()
   # spark_session = SparkSession \
   #   .builder \
