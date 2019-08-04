@@ -249,7 +249,7 @@ def get_post_site_size(sql_context, start_date, end_date):
   :param end_date: ending datetime, string
   :return: a spark_session data frame, starts and ends four hours early relative to queried datetime range
   """
-  query = "SELECT siteId, LEN(body) as size " + \
+  query = "SELECT siteId, LENGTH(body) as size " + \
           "FROM " + SCHEMA + ".post " + \
           "WHERE dateCreated BETWEEN \"" + \
           start_date + "\" AND \"" + end_date + "\""
@@ -259,13 +259,37 @@ def get_post_site_size(sql_context, start_date, end_date):
 def sum_post_size_by_site(df):
   """
   aggregates the size of the posts by sites
-  :param df: dataframe containing siteId and postSize
-  :return:
+  :param df: dataframe containing siteId and postSize, will be freed
+  :return: aggregated df
   """
   summed = df.groupBy('siteId').agg(functions.sum('size')).withColumnRenamed('sum(size)','size')
   df.unpersist()
   return summed
 
+
+def index_hourly_total_post_sizes(spark_session, sql_context, start_date, end_date):
+  """
+  method name explains itself
+  :param spark_session: for freeing memory
+  :param sql_context: spark sql context
+  :param start_date: datetime
+  :param end_date: datetime
+  :return: None
+  """
+  diff = end_date - start_date
+  days_apart, seconds_apart = diff.days, diff.seconds
+  hours_apart = days_apart * 24 + seconds_apart // 3600
+  for n in range(hours_apart):
+    time = start_date + relativedelta(hours=+n)
+    print(time)
+    sizes = get_post_site_size(sql_context, offset_time_string(time), offset_time_string(time + relativedelta(hours=+1)))
+    total_post_sizes = sum_post_size_by_site(sizes)
+    date_appended_sizes = total_post_sizes.withColumn("time", functions.lit(time - timedelta(hours=4)))
+    total_post_sizes.unpersist()
+    insert_df_to_table(date_appended_sizes, "total_post_sizes")
+    date_appended_sizes.unpersist()
+    spark_session.catalog.clearCache()
+  return
 
 def main():
   spark_session = SparkSession \
@@ -283,13 +307,12 @@ def main():
   #   .config('spark.driver.extraClassPath', './mysql-connector-java-8.0.16.jar') \
   #   .getOrCreate()
   sc = spark_session.sparkContext
-  print(sc.uiWebUrl)
   sc.setLogLevel("WARN")
   sql_context = SQLContext(sc)
 
-  start_date = get_first_post_time(sql_context).collect()[0]['dateCreated'].replace(hour=0, minute=0, second=0)
-  end_date = get_last_post_time(sql_context).collect()[0]['dateCreated'].replace(hour=0, minute=0, second=0)
-  index_monthly_word_frequencies(spark_session, sql_context, start_date, end_date)
+  start_date = get_first_post_time(sql_context).collect()[0]['dateCreated'].replace(minute=0, second=0)
+  end_date = get_last_post_time(sql_context).collect()[0]['dateCreated'].replace(minute=0, second=0)
+  index_hourly_total_post_sizes(spark_session, sql_context, start_date, end_date)
 
 
 if __name__ == "__main__":
