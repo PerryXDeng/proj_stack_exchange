@@ -286,7 +286,7 @@ def index_hourly_total_post_sizes(spark_session, sql_context, start_date, end_da
     total_post_sizes = sum_post_size_by_site(sizes)
     date_appended_sizes = total_post_sizes.withColumn("time", functions.lit(time - timedelta(hours=4)))
     total_post_sizes.unpersist()
-    insert_df_to_table(date_appended_sizes, "total_post_sizes")
+    insert_df_to_table(date_appended_sizes, "hourly_post_sizes")
     date_appended_sizes.unpersist()
     spark_session.catalog.clearCache()
   return
