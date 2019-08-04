@@ -4,34 +4,38 @@ from creds import PASSWORD as PASS
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 from dateutil.rrule import rrule, DAILY
-
+from nltk.corpus import stopwords
 
 SCHEMA = "main_v2"
 URL = "jdbc:mysql://localhost:3306/" + SCHEMA
 TIME_FMT = '{0:%Y-%m-%d %H:%M:%S}'
+JDBC_PROPERTIES = {"user":UNAME, "password":PASS}
 
-
-spark = SparkSession \
-    .builder \
-    .appName("Database access example") \
-    .config('spark.driver.extraClassPath', './mysql-connector-java-8.0.16.jar') \
-    .getOrCreate()
-
-sc = spark.sparkContext
-sql_context = SQLContext(sc)
-sc.setLogLevel("WARN")
-
-
-def execute_query(sql_query):
+def execute_query(sql_context, sql_query):
   """
-  Executes an arbitrary sql statement and returns the dataframe that is loaded into memory
+  Executes an arbitrary sql statement and returns the data frame
+  :param sql_context: spark sql context
+  :param sql_query: arbitrary query
   """
-  # TODO: make generic for each type of clause in a query?
   return sql_context.read.format("jdbc").options(
       url=URL,
       user=UNAME,
       password=PASS,
       query=sql_query).load()
+
+
+def insert_df_to_table(df, table_name):
+  """
+  method name explains itself
+  :param df: spark data frame
+  :param table_name: sql table name
+  :return: None
+  """
+  df.write.jdbc(
+      url=URL,
+      table=table_name,
+      mode="append",
+      properties=JDBC_PROPERTIES)
 
 
 def offset_time_string(datetime_object):
@@ -43,51 +47,55 @@ def offset_time_string(datetime_object):
   return TIME_FMT.format(datetime_object + timedelta(hours=4))
 
 
-def get_post_site_text(start_date, end_date):
+def get_post_site_count(sql_context, start_date, end_date):
   """
-  method name explains itself
+  method name explains itself, count the number of posts by site
+  :param sql_context: spark sql
   :param start_date: starting datetime, string
   :param end_date: ending datetime, string
-  :return: a spark data frame, starts and ends four hours early relative to queried datetime range
+  :return: a spark_session data frame, starts and ends four hours early relative to queried datetime range
   """
-  query = "SELECT siteId, body, dateCreated " + \
+  query = "SELECT siteId, COUNT(*) as posts_count " + \
           "FROM " + SCHEMA + ".post " + \
           "WHERE dateCreated BETWEEN \"" + \
-          start_date + "\" AND \"" + end_date + "\""
-  return execute_query(query)
+          start_date + "\" AND \"" + end_date + "\" " + \
+          "GROUP BY siteId"
+  return execute_query(sql_context, query)
 
 
-def get_first_post_time(condition=""):
+def get_first_post_time(sql_context, condition=""):
   """
   method name explains itself
+  :param sql_context: spark sql
   :param condition: a WHERE condition to filter results if needed
-  :return: a spark data frame, containing the sorted createdDateTime of the first post satisfying the condition
+  :return: a spark_session data frame, containing the sorted createdDateTime of the first post satisfying the condition
   """
   query = "SELECT dateCreated " + \
           "FROM " + SCHEMA + ".post " + \
           condition + \
           " ORDER BY dateCreated ASC limit 1"  # first row
-  return execute_query(query)
+  return execute_query(sql_context, query)
 
 
-def get_last_post_time(condition=""):
+def get_last_post_time(sql_context, condition=""):
   """
   method name explains itself
+  :param sql_context: spark sql
   :param condition: a WHERE condition to filter results if needed
-  :return: a spark data frame, containing the sorted createdDateTime of the last post satisfying the condition
+  :return: a spark_session data frame, containing the sorted createdDateTime of the last post satisfying the condition
   """
   query = "SELECT dateCreated " + \
           "FROM " + SCHEMA + ".post " + \
           condition + \
           " ORDER BY dateCreated DESC limit 1"  # last row
-  return execute_query(query)
+  return execute_query(sql_context, query)
 
 
 def spark_function_clean_string(spark_column):
   """
   preprocess a string column
-  :param spark_column: spark column
-  :return: spark function
+  :param spark_column: spark_session column
+  :return: spark_session function
   """
   # remove formatting and html entities
   f = functions.regexp_replace(spark_column, "(<(.*)>)|(&(amp|lt|gt);)", " ")
@@ -100,17 +108,36 @@ def spark_function_clean_string(spark_column):
   return f
 
 
-def sum_word_counts(df):
+def get_post_site_text(sql_context, start_date, end_date):
+  """
+  method name explains itself
+  :param sql_context: spark sql
+  :param start_date: starting datetime, string
+  :param end_date: ending datetime, string
+  :return: a spark_session data frame, starts and ends four hours early relative to queried datetime range
+  """
+  query = "SELECT siteId, body " + \
+          "FROM " + SCHEMA + ".post " + \
+          "WHERE dateCreated BETWEEN \"" + \
+          start_date + "\" AND \"" + end_date + "\""
+  return execute_query(sql_context, query)
+
+
+def sum_post_word_counts_by_site(df):
   """
   method names explains itself
   case insensitive (all post body converted to lower case)
-  :param df: a spark data frame, should contain attribute "body" for post bodies
-  :return: a spark data frame containing rows of (word:string, count:int)
+  :param df: a spark_session data frame, should contain attribute "body" for post bodies
+  :return: a spark_session data frame containing rows of (word:string, count:int)
   """
   processed = df.withColumn('word', functions.explode(functions.split(
       spark_function_clean_string(functions.column('body')), ' ')))
   df.unpersist() # free memory
-  return processed.groupBy('siteId', 'word').count().filter(processed.word != "")
+  truncated = processed.withColumn('word', functions.substring(processed.word, 1, 20))
+  processed.unpersist()
+  summed = truncated.groupBy('siteId', 'word').count().filter(truncated.word != "")
+  truncated.unpersist()
+  return summed
 
 
 def reduce_word_counts(df_1, df_2):
@@ -128,30 +155,131 @@ def reduce_word_counts(df_1, df_2):
   union = df_1.union(df_2)
   df_1.unpersist()  # free memory
   df_2.unpersist()  # free memory
-  return union.groupBy('siteId', 'word').agg(functions.sum('count')).withColumnRenamed('sum(count)','count')
+  reduced = union.groupBy('siteId', 'word').agg(functions.sum('count')).withColumnRenamed('sum(count)','count')
+  union.unpersist()
+  return reduced
 
 
-def word_count_for_month(date:datetime):
+def word_frequencies_for_month(sql_context, date:datetime, stop_words:set):
   month_start = date.replace(day=1)
   month_end = month_start + relativedelta(months=+1)
   df = None
   for day in rrule(DAILY, dtstart=month_start, until=month_end):
     start = offset_time_string(day)
     end = offset_time_string(day + timedelta(days=1))
-    df = reduce_word_counts(df, sum_word_counts(get_post_site_text(start, end)))
-  return df
+    df = reduce_word_counts(df, sum_post_word_counts_by_site(get_post_site_text(sql_context, start, end)))
+  posts_counts = get_post_site_count(sql_context, offset_time_string(month_start), offset_time_string(month_end))
+  joined = df.join(posts_counts, "siteId")
+  df.unpersist()
+  frequencies = joined.select(functions.column("siteId"), functions.column("word"),
+              (functions.column("count")/functions.column("posts_count")).alias("frequency"))
+  joined.unpersist()
+  # filter out irrelevant words
+  filtered = frequencies.filter(frequencies.word.isin(stop_words) == False)
+  frequencies.unpersist()
+  return filtered
+
+
+def create_stop_words():
+  # ignore common English words
+  stop_words = set(stopwords.words('english'))
+  # # ignore Python keywords and builtin types
+  # stop_words.update({'false', 'none', 'true', 'and', 'as', 'assert', 'break', 'class', 'continue', 'def', 'del', 'elif',
+  #                    'else', 'except', 'finally', 'for', 'from', 'global', 'if', 'import', 'in', 'is', 'lambda',
+  #                    'nonlocal', 'not', 'or', 'pass', 'raise', 'try', 'while', 'with', 'yield',
+  #                    'int', 'float', 'complex', 'bool', 'abs', 'divmod', 'pow', 'round', 'str', 'xrange', 'set',
+  #                    'frozenset', 'dict', 'len', 'iter', 'open', 'memoryview', 'range', 'enumerate', 'bytearray'})
+  # # ignore VBA keywords
+  # stop_words.update({'alias', 'as', 'base', 'boolean', 'byte', 'byref', 'byval', 'call', 'case', 'cbool', 'cbyte',
+  #                    'ccur', 'cdate', 'cdbl', 'cint', 'clng', 'clnglng', 'compare', 'const', 'csng', 'cstr', 'cvar',
+  #                    'declare', 'defbool', 'defbyte', 'defdate', 'defdouble', 'defint', 'deflng', 'deflnglng',
+  #                    'deflngptr', 'defobj', 'defsng', 'defstr', 'dim', 'do', 'double', 'each', 'elseif', 'empty',
+  #                    'end', 'enum', 'erase', 'error', 'event', 'exit', 'explicit', 'function', 'get', 'goto',
+  #                    'implements', 'integer', 'is', 'let', 'lbound', 'lib', 'like','long', 'longlong', 'loop', 'lset',
+  #                    'me', 'mod', 'new', 'next', 'not', 'nothing', 'null', 'object', 'on', 'option', 'optional',
+  #                    'paramarray', 'preserve', 'private', 'property', 'public', 'raiseevent', 'redim', 'resume',
+  #                    'rset', 'select', 'set', 'single', 'static', 'step', 'stop', 'string', 'sub', 'then',
+  #                    'to', 'true', 'type', 'typeof', 'ubound', 'until', 'wend', 'while', 'with', 'withevents'})
+  # # ignore Java keywords
+  # stop_words.update({'abstract', 'assert', 'boolean', 'break', 'byte', 'case', 'catch', 'char', 'class', 'continue',
+  #                    'default', 'do', 'double', 'else', 'enum', 'exports', 'extends', 'final', 'finally', 'float',
+  #                    'for', 'if', 'implements', 'import', 'instanceof', 'int', 'interface', 'long', 'module', 'native',
+  #                    'new', 'package', 'private', 'protected', 'public', 'requires', 'short', 'static',
+  #                    'strictfp', 'super', 'switch', 'synchronized', 'this', 'throw', 'throws', 'transient', 'try',
+  #                    'void', 'volatile', 'while', 'true', 'null', 'false', 'var', 'const', 'goto'})
+  # # ignore C keywords
+  # stop_words.update({'auto', 'break', 'case', 'char', 'const', 'continue', 'default', 'do', 'double', 'else', 'enum',
+  #                    'extern', 'float', 'for', 'goto', 'if', 'int', 'long', 'register', 'short', 'signed',
+  #                    'sizeof', 'static', 'struct', 'switch', 'typedef', 'union', 'unsigned', 'void', 'volatile',
+  #                    'while'})
+  # ignore common constants
+  stop_words.update({'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'})
+  return stop_words
+
+
+def index_monthly_word_frequencies(spark_session, sql_context, start_date, end_date):
+  """
+  method name explains itself
+  :param spark_session: for freeing memory
+  :param sql_context: spark sql context
+  :param start_date: datetime
+  :param end_date: datetime
+  :return: None
+  """
+  stop_words = create_stop_words()
+  start_date = start_date.replace(day=1)
+  for n in range((end_date.year - start_date.year) * 12 + end_date.month - start_date.month):
+    month = start_date + relativedelta(months=+n)
+    print(month)
+    frequencies = word_frequencies_for_month(sql_context, month, stop_words)
+    date_appended_frequencies = frequencies.withColumn("date", functions.lit(month - timedelta(hours=4)))
+    frequencies.unpersist()
+    insert_df_to_table(date_appended_frequencies, "word_frequencies")
+    date_appended_frequencies.unpersist()
+    spark_session.catalog.clearCache()
+  return
+
+
+def get_post_site_size(sql_context, start_date, end_date):
+  """
+  method name explains itself
+  :param sql_context: spark sql
+  :param start_date: starting datetime, string
+  :param end_date: ending datetime, string
+  :return: a spark_session data frame, starts and ends four hours early relative to queried datetime range
+  """
+  query = "SELECT siteId, LEN(body) as size " + \
+          "FROM " + SCHEMA + ".post " + \
+          "WHERE dateCreated BETWEEN \"" + \
+          start_date + "\" AND \"" + end_date + "\""
+  return execute_query(sql_context, query)
+
+
+def sum_post_size_by_site(df):
+  """
+  aggregates the size of the posts by sites
+  :param df: dataframe containing siteId and postSize
+  :return:
+  """
+  summed = df.groupBy('siteId').agg(functions.sum('size')).withColumnRenamed('sum(size)','size')
+  df.unpersist()
+  return summed
 
 
 def main():
-  start_date = datetime.strptime("2018-03-15", "%Y-%m-%d")
-  # end_date = datetime.strptime("2018-03-16", "%Y-%m-%d")
-  # counts_1 = sum_word_counts(get_post_site_text(offset_time_string(start_date), offset_time_string(end_date)))
-  # counts_2 = sum_word_counts(get_post_site_text(offset_time_string(start_date + timedelta(days=1)), offset_time_string(end_date + timedelta(days=1))))
-  # counts = reduce_word_counts(counts_1, counts_2)
-  # counts.show(truncate=False)
-  month = word_count_for_month(start_date).sort('count', ascending=False)
-  month.show()
-  # get_first_post_time().show()
+  spark_session = SparkSession \
+    .builder \
+    .appName("Database access example") \
+    .config('spark.driver.extraClassPath', './mysql-connector-java-8.0.16.jar') \
+    .getOrCreate()
+  sc = spark_session.sparkContext
+  sc.setLogLevel("WARN")
+  sql_context = SQLContext(sc)
+
+  start_date = get_first_post_time(sql_context).collect()[0]['dateCreated'].replace(hour=0, minute=0, second=0)
+  end_date = get_last_post_time(sql_context).collect()[0]['dateCreated'].replace(hour=0, minute=0, second=0)
+  index_monthly_word_frequencies(spark_session, sql_context, start_date, end_date)
 
 
-main()
+if __name__ == "__main__":
+  main()
