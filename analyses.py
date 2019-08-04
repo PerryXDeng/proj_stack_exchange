@@ -268,7 +268,7 @@ def sum_post_size_by_site(df):
   return summed
 
 
-def index_hourly_post_sizes(spark_session, sql_context, start, hourly_offset):
+def index_hourly_post_sizes(sql_context, start, hourly_offset):
   current = start + relativedelta(hours=+hourly_offset)
   print(current)
   sizes = get_post_site_size(sql_context, offset_time_string(current), offset_time_string(current  + relativedelta(hours=+1)))
@@ -277,7 +277,6 @@ def index_hourly_post_sizes(spark_session, sql_context, start, hourly_offset):
   total_post_sizes.unpersist()
   insert_df_to_table(date_appended_sizes, "hourly_post_sizes")
   date_appended_sizes.unpersist()
-  spark_session.catalog.clearCache()
   return
 
 
@@ -296,7 +295,7 @@ def index_all_hourly_total_post_sizes(spark_session, sql_context, start_date, en
 
   with ThreadPoolExecutor(max_workers=50) as executor:
     offsets = range(hours_apart)
-    [executor.submit(index_hourly_post_sizes, spark_session, sql_context, start_date, n) for n in offsets]
+    [executor.submit(index_hourly_post_sizes, sql_context, start_date, n) for n in offsets]
   return
 
 def main():
