@@ -271,9 +271,13 @@ def main():
     .builder \
     .appName("Database access example") \
     .config('spark.driver.extraClassPath', './mysql-connector-java-8.0.16.jar') \
+    .config('spark.executor.memory', '450g') \
+    .config('spark.driver.memory', '450g') \
+    .config('spark.executor.cores', '50') \
+    .config('spark.cores.max', '50') \
     .getOrCreate()
   sc = spark_session.sparkContext
-  sc.setLogLevel("WARN")
+  sc.setLogLevel("INFO")
   sql_context = SQLContext(sc)
 
   start_date = get_first_post_time(sql_context).collect()[0]['dateCreated'].replace(hour=0, minute=0, second=0)
