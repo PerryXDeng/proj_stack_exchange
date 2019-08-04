@@ -312,7 +312,7 @@ def main():
 
   # start_date = get_first_post_time(sql_context).collect()[0]['dateCreated'].replace(minute=0, second=0)
   end_date = get_last_post_time(sql_context).collect()[0]['dateCreated'].replace(minute=0, second=0)
-  start_date = end_date - relativedelta(years=-1)
+  start_date = end_date + relativedelta(years=-1)
   index_hourly_total_post_sizes(spark_session, sql_context, start_date, end_date)
 
 
