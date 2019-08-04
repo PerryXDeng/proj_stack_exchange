@@ -7,7 +7,8 @@ from dateutil.rrule import rrule, DAILY
 from nltk.corpus import stopwords
 
 SCHEMA = "main_v2"
-URL = "jdbc:mysql://129.21.171.171:3306/" + SCHEMA
+PERFORMANCE_PILL = "?useServerPrepStmts=false&rewriteBatchedStatements=true"
+URL = "jdbc:mysql://localhost:3306/" + SCHEMA + PERFORMANCE_PILL
 TIME_FMT = '{0:%Y-%m-%d %H:%M:%S}'
 JDBC_PROPERTIES = {"user":UNAME, "password":PASS}
 
@@ -276,8 +277,14 @@ def main():
     .config('spark.executor.cores', '50') \
     .config('spark.cores.max', '50') \
     .getOrCreate()
+  # spark_session = SparkSession \
+  #   .builder \
+  #   .appName("Database access example") \
+  #   .config('spark.driver.extraClassPath', './mysql-connector-java-8.0.16.jar') \
+  #   .getOrCreate()
   sc = spark_session.sparkContext
-  sc.setLogLevel("INFO")
+  print(sc.uiWebUrl)
+  sc.setLogLevel("WARN")
   sql_context = SQLContext(sc)
 
   start_date = get_first_post_time(sql_context).collect()[0]['dateCreated'].replace(hour=0, minute=0, second=0)
