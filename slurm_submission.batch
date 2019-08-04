@@ -1,0 +1,11 @@
+#!/bin/bash -l
+#SBATCH -J spark_job
+#SBATCH -o spark.out
+#SBATCH -e spark.err
+#SBATCH --mail-user xxd9704@rit.edu
+#SBATCH --mail-type=ALL
+#SBATCH -t 4-0:0:0
+#SBATCH -A blackbox -p onboard -n 4
+#SBATCH --mem=262144
+source ./venv/bin/activate
+python analyses.py
