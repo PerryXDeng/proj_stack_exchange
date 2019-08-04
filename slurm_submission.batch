@@ -5,7 +5,7 @@
 #SBATCH --mail-user xxd9704@rit.edu
 #SBATCH --mail-type=ALL
 #SBATCH -t 4-0:0:0
-#SBATCH -A blackbox -p onboard -n 4
+#SBATCH -A blackbox -p onboard -n 400
 #SBATCH --mem=262144
 source ./venv/bin/activate
 python analyses.py
