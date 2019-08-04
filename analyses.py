@@ -7,7 +7,7 @@ from dateutil.rrule import rrule, DAILY
 from nltk.corpus import stopwords
 
 SCHEMA = "main_v2"
-URL = "jdbc:mysql://localhost:3306/" + SCHEMA
+URL = "jdbc:mysql://129.21.171.171:3306/" + SCHEMA
 TIME_FMT = '{0:%Y-%m-%d %H:%M:%S}'
 JDBC_PROPERTIES = {"user":UNAME, "password":PASS}
 
