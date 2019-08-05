@@ -1,3 +1,4 @@
+from textblob import TextBlob
 from pyspark.sql import SparkSession, SQLContext, functions
 from creds import USERNAME as UNAME
 from creds import PASSWORD as PASS
@@ -79,7 +80,7 @@ def get_first_post_time(sql_context, condition=""):
   return execute_query(sql_context, query)
 
 
-def get_last_post_time(condition=""):
+def get_last_post_time(sql_context, condition=""):
   """
   method name explains itself
   :param sql_context: spark sql
@@ -118,7 +119,7 @@ def get_post_site_text(sql_context, start_date, end_date):
   :param end_date: ending datetime, string
   :return: a spark_session data frame, starts and ends four hours early relative to queried datetime range
   """
-  query = "SELECT siteId, body " + \
+  query = "SELECT siteId, postId, body " + \
           "FROM " + SCHEMA + ".post " + \
           "WHERE dateCreated BETWEEN \"" + \
           start_date + "\" AND \"" + end_date + "\""
@@ -298,11 +299,23 @@ def index_all_hourly_total_post_sizes(spark_session, sql_context, start_date, en
     [executor.submit(index_hourly_post_sizes, sql_context, start_date, n) for n in offsets]
   return
 
-def perform_sentiment_analysis(start_date, end_date):
-    posts = get_post_site_text(start_date, end_date)
-    sentiment_values = posts.rdd.map(lambda x:  TextBlob(x.body).sentiment)
-    sentiment_values = sentiment_values.collect()
-    return sentiment_values
+def perform_sentiment_anlysis_helper(post):
+  sentiment = TextBlob(post.body).sentiment
+  return (post.postId, post.siteId, sentiment.polarity, sentiment.subjectivity)
+
+def perform_sentiment_analysis(sql_context, start_date, end_date):
+  posts = get_post_site_text(sql_context, start_date, end_date)
+  posts_cleaned = posts.withColumn("body", spark_function_clean_string(functions.column('body')))
+  posts.unpersist()
+  sentiment_values = posts_cleaned.rdd.map(lambda x:  perform_sentiment_anlysis_helper(x))
+  insert_df_to_table(sentiment_values.toDF(["postId", "siteId", "polarity", "subjectivity"]), "sentiment_values")
+  sentiment_values.unpersist()
+
+def date_range(start_date, end_date):
+  counter_date = start_date
+  while start_date < end_date:
+    yield start_date
+    start_date += timedelta(days=1)
 
 def main():
   spark_session = SparkSession \
@@ -324,10 +337,16 @@ def main():
   sql_context = SQLContext(sc)
 
   # start_date = get_first_post_time(sql_context).collect()[0]['dateCreated'].replace(minute=0, second=0)
-  end_date = get_last_post_time(sql_context).collect()[0]['dateCreated'].replace(minute=0, second=0)
-  start_date = end_date + relativedelta(years=-1)
-  index_all_hourly_total_post_sizes(spark_session, sql_context, start_date, end_date)
+  # end_date = get_last_post_time(sql_context).collect()[0]['dateCreated'].replace(minute=0, second=0)
+  # start_date = end_date + relativedelta(years=-1)
+  # index_all_hourly_total_post_sizes(spark_session, sql_context, start_date, end_date)
 
+  start_date = datetime.strptime("2018-01-03", "%Y-%m-%d")
+  end_date = datetime.strptime("2018-03-15", "%Y-%m-%d")
+
+  for dt in date_range(start_date, end_date):
+      print(dt)
+      perform_sentiment_analysis(sql_context, offset_time_string(dt), offset_time_string(dt + timedelta(days=1, microseconds=-1)))
 
 if __name__ == "__main__":
   main()
