@@ -77,10 +77,10 @@ def word_count_tab():
 
     p1 = generate_plot("Select Stackoverflow Buzzwords", sites, words, emit_site_name=True)
     p2 = generate_plot("Select Stats Stack Exchange Buzzwords", sites_2, words_2, emit_site_name=True)
-    p2 = generate_plot("Select History Stack Exchange Buzzwords", sites_3, words_3, emit_site_name=True)
+    p3 = generate_plot("Select History Stack Exchange Buzzwords", sites_3, words_3, emit_site_name=True)
 
     # Create a row layout
-    layout = column(p1, p2)
+    layout = column(p1, p2, p3)
 
     tab = Panel(child=layout, title='Buzzword Frequencies')
 
