@@ -10,9 +10,11 @@ Then execute
 
 Example:
 `bokeh serve test_app.py --use-xheaders --allow-websocket-origin=pdeng.student.rit.edu --port 5006`
+`bokeh serve app --use-xheaders --allow-websocket-origin=pdeng.student.rit.edu --port 5006`
 
 
 ## Dependencies
 pip3 install mysql-connector-python
 pip3 install bokeh
 pip3 install pandas
+pip3 install joblib

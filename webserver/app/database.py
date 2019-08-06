@@ -26,3 +26,11 @@ def get_site_name(siteId):
   """
   df = query("SELECT name FROM site WHERE siteId=" + str(siteId))
   return df['name'].values[0]
+
+def get_all_site_names_sorted_by_site_id():
+  """
+  method explains itself
+  :return: list of strings
+  """
+  df = query("SELECT name FROM site ORDER BY siteId ASC")
+  return list(df['name'].values)
