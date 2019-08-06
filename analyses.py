@@ -346,18 +346,19 @@ def main():
   sc.setLogLevel("WARN")
   sql_context = SQLContext(sc)
 
-  # start_date = get_first_post_time(sql_context).collect()[0]['dateCreated'].replace(minute=0, second=0)
+  start_date = get_first_post_time(sql_context).collect()[0]['dateCreated'].replace(minute=0, second=0)
+  print(start_date)
   # end_date = get_last_post_time(sql_context).collect()[0]['dateCreated'].replace(minute=0, second=0)
   # start_date = end_date + relativedelta(years=-1)
   # index_all_hourly_total_post_sizes(spark_session, sql_context, start_date, end_date)
 
-  start_date = datetime.strptime("2008-09-01", "%Y-%m-%d")
-  end_date = datetime.strptime("2008-10-01", "%Y-%m-%d")
-  with ThreadPool(processes=3) as pool:
-    pool.starmap(perform_sentiment_analysis,
-      [(sql_context,
-        offset_time_string(dt),
-        offset_time_string(dt + timedelta(days=1, microseconds=-1))) for dt in date_range(start_date, end_date)])
+  # start_date = datetime.strptime("2008-09-01", "%Y-%m-%d")
+  # end_date = datetime.strptime("2008-10-01", "%Y-%m-%d")
+  # with ThreadPool(processes=3) as pool:
+  #   pool.starmap(perform_sentiment_analysis,
+  #     [(sql_context,
+  #       offset_time_string(dt),
+  #       offset_time_string(dt + timedelta(days=1, microseconds=-1))) for dt in date_range(start_date, end_date)])
 
 
 if __name__ == "__main__":
