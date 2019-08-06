@@ -26,13 +26,13 @@ def word_count_tab():
         site_name = database.get_site_name(siteId)
         return site_name + ": " + word
 
-    def construct_data_frame_series(sites, words):
-        n = len(words)
+    def construct_data_frame_series(site_ids, words_list):
+        n = len(words_list)
         series = [None] * n
         legends = [None] * n
         for i in range(n):
-            site = sites[i]
-            word = words[i]
+            site = site_ids[i]
+            word = words_list[i]
             df = construct_data_frame(site, word)
             legend = construct_legend_name(site, word)
             series[i] = df
@@ -62,20 +62,24 @@ def word_count_tab():
         p.add_layout(Legend(items=legend_items, location="center"), "right")
         return p
 
-    sites = [156, 156, 156, 156, 156, 156]
-    words = ["database", "science", "mining", "sql", "hadoop", "spark"]
+    sites_1 = [156, 156, 156, 156, 156, 156]
+    words_2 = ["database", "science", "mining", "sql", "hadoop", "spark"]
 
     sites_2 = [135, 135, 135]
     words_2 = ["bayesian", "svm", "neural"]
 
-    sites_3 = [73, 73, 73, 73]
-    words_3 = ["hitler", "stalin", "mao", "trump"]
+    sites_3 = [73, 73, 73, 73, 73, 73]
+    words_3 = ["hitler", "stalin", "mao", "trump", "obama", "merkel"]
 
-    p1 = generate_plot("Select Stackoverflow Buzzwords", sites, words, emit_site_name=True)
+    sites_4 = [110, 110, 110, 110, 110, 110]
+    words_4 = ["liberalism", "altleft", "altright", "trump", "obama", "merkel"]
+
+    p1 = generate_plot("Select Stackoverflow Buzzwords", sites_1, words_2, emit_site_name=True)
     p2 = generate_plot("Select Stats Stack Exchange Buzzwords", sites_2, words_2, emit_site_name=True)
     p3 = generate_plot("Select History Stack Exchange Buzzwords", sites_3, words_3, emit_site_name=True)
+    p4 = generate_plot("Select Politics Stack Exchange Buzzwords", sites_4, words_4, emit_site_name=True)
 
-    layout = column(p1, p2, p3)
+    layout = column(p1, p2, p3, p4)
 
     tab = Panel(child=layout, title='Buzzword Frequencies All Time')
 
