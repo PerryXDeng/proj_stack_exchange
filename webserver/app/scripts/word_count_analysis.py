@@ -72,7 +72,7 @@ def word_count_tab():
     words_3 = ["hitler", "stalin", "mao", "trump", "obama", "merkel"]
 
     sites_4 = [110, 110, 110, 110, 110, 110]
-    words_4 = ["liberalism", "altleft", "altright", "trump", "obama", "merkel"]
+    words_4 = ["trump", "obama", "merkel"]
 
     p1 = generate_plot("Select Stackoverflow Buzzwords", sites_1, words_2, emit_site_name=True)
     p2 = generate_plot("Select Stats Stack Exchange Buzzwords", sites_2, words_2, emit_site_name=True)
