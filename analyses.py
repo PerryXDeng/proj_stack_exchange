@@ -280,10 +280,9 @@ def index_hourly_post_sizes(sql_context, start, hourly_offset):
   return
 
 
-def index_all_hourly_total_post_sizes(spark_session, sql_context, start_date, end_date):
+def index_all_hourly_total_post_sizes(sql_context, start_date, end_date):
   """
   method name explains itself
-  :param spark_session: for freeing memory
   :param sql_context: spark sql context
   :param start_date: datetime
   :param end_date: datetime
@@ -320,7 +319,7 @@ def main():
   # start_date = get_first_post_time(sql_context).collect()[0]['dateCreated'].replace(minute=0, second=0)
   end_date = get_last_post_time(sql_context).collect()[0]['dateCreated'].replace(minute=0, second=0)
   start_date = end_date + relativedelta(years=-1)
-  index_all_hourly_total_post_sizes(spark_session, sql_context, start_date, end_date)
+  index_all_hourly_total_post_sizes(sql_context, start_date, end_date)
 
 
 if __name__ == "__main__":
