@@ -4,7 +4,7 @@ from bokeh.plotting import figure
 
 
 def word_count_tab():
-    def make_dataset():  # need to add dat input hereish
+    def make_dataset():
         pass
 
     def make_plot(src):

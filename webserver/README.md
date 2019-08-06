@@ -1,5 +1,5 @@
 ## Testing
-To test an app over an unsecured connection, execute `bokeh serve <filename> --port <portnum>`. 
+To test an app over an unsecured connection, execute `bokeh serve <filename> --port <portnum>`.
 
 ## Deployment
 To securely deploy an app,
@@ -10,3 +10,9 @@ Then execute
 
 Example:
 `bokeh serve test_app.py --use-xheaders --allow-websocket-origin=pdeng.student.rit.edu --port 5006`
+
+
+## Dependencies
+pip3 install mysql-connector-python
+pip3 install bokeh
+pip3 install pandas
