@@ -1,0 +1,17 @@
+DREW
+Created data uploader v1.
+Created data uploader v2.
+Setup post table in database.
+Implemented basic Bokeh tab template.
+Created analysis and visualizations for sentiment analysis.
+
+PERRY
+Created data file stucture processor.
+Setup bokeh.
+Created visualizations and analysis for the word count and post size analyses.
+
+SAM
+Created initial database models.
+Setup spark.
+Created model for post classification.
+Created visualizations for post classification.
