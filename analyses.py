@@ -1,3 +1,5 @@
+from multiprocessing.pool import ThreadPool
+
 from textblob import TextBlob
 from pyspark.sql import SparkSession, SQLContext, functions
 from creds import USERNAME as UNAME
@@ -8,9 +10,10 @@ from dateutil.rrule import rrule, DAILY
 from nltk.corpus import stopwords
 from concurrent.futures import ThreadPoolExecutor
 
+
 SCHEMA = "main_v2"
 PERFORMANCE_PILL = "?useServerPrepStmts=false&rewriteBatchedStatements=true"
-URL = "jdbc:mysql://localhost:3306/" + SCHEMA + PERFORMANCE_PILL
+URL = "jdbc:mysql://localhost:3307/" + SCHEMA + PERFORMANCE_PILL
 TIME_FMT = '{0:%Y-%m-%d %H:%M:%S}'
 JDBC_PROPERTIES = {"user":UNAME, "password":PASS}
 
@@ -304,15 +307,23 @@ def perform_sentiment_anlysis_helper(post):
   return (post.postId, post.siteId, sentiment.polarity, sentiment.subjectivity)
 
 def perform_sentiment_analysis(sql_context, start_date, end_date):
-  posts = get_post_site_text(sql_context, start_date, end_date)
+  print(start_date)
+  posts = get_post_site_text(sql_context, start_date, end_date).repartition(2)
   posts_cleaned = posts.withColumn("body", spark_function_clean_string(functions.column('body')))
+  posts_cleaned = posts_cleaned
   posts.unpersist()
   sentiment_values = posts_cleaned.rdd.map(lambda x:  perform_sentiment_anlysis_helper(x))
-  insert_df_to_table(sentiment_values.toDF(["postId", "siteId", "polarity", "subjectivity"]), "sentiment_values")
+  if sentiment_values.count() is 0:
+    print(start_date + " is empty")
+    return
+  try:
+    insert_df_to_table(sentiment_values.toDF(["postId", "siteId", "polarity", "subjectivity"]), "sentiment_values")
+  except Exception as e:
+    print(e)
+    return
   sentiment_values.unpersist()
 
 def date_range(start_date, end_date):
-  counter_date = start_date
   while start_date < end_date:
     yield start_date
     start_date += timedelta(days=1)
@@ -322,10 +333,10 @@ def main():
     .builder \
     .appName("Database access example") \
     .config('spark.driver.extraClassPath', './mysql-connector-java-8.0.16.jar') \
-    .config('spark.executor.memory', '450g') \
-    .config('spark.driver.memory', '450g') \
-    .config('spark.executor.cores', '45') \
-    .config('spark.cores.max', '45') \
+    .config('spark.executor.memory', '3g') \
+    .config('spark.driver.memory', '3g') \
+    .config('spark.executor.cores', '4') \
+    .config('spark.cores.max', '4') \
     .getOrCreate()
   # spark_session = SparkSession \
   #   .builder \
@@ -341,12 +352,14 @@ def main():
   # start_date = end_date + relativedelta(years=-1)
   # index_all_hourly_total_post_sizes(spark_session, sql_context, start_date, end_date)
 
-  start_date = datetime.strptime("2018-01-03", "%Y-%m-%d")
-  end_date = datetime.strptime("2018-03-15", "%Y-%m-%d")
+  start_date = datetime.strptime("2008-09-01", "%Y-%m-%d")
+  end_date = datetime.strptime("2008-10-01", "%Y-%m-%d")
+  with ThreadPool(processes=3) as pool:
+    pool.starmap(perform_sentiment_analysis,
+      [(sql_context,
+        offset_time_string(dt),
+        offset_time_string(dt + timedelta(days=1, microseconds=-1))) for dt in date_range(start_date, end_date)])
 
-  for dt in date_range(start_date, end_date):
-      print(dt)
-      perform_sentiment_analysis(sql_context, offset_time_string(dt), offset_time_string(dt + timedelta(days=1, microseconds=-1)))
 
 if __name__ == "__main__":
   main()
