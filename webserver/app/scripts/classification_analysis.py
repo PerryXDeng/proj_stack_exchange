@@ -1,21 +1,17 @@
 from bokeh.layouts import row
 from bokeh.models import Panel, WidgetBox
-from bokeh.models.widgets import TextAreaInput, RadioButtonGroup, Button, Paragraph 
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.naive_bayes import MultinomialNB
-from sklearn.feature_extraction.text import TfidfTransformer
-from sklearn.pipeline import Pipeline
+from bokeh.models.widgets import TextAreaInput, RadioButtonGroup, Button, Paragraph
 from joblib import load
-from sklearn.linear_model import SGDClassifier
+
 
 def classification_tab():
     pairs = [["stackoverflow.com", "academia.stackexchange.com"],["stackoverflow.com", "softwareengineering.stackexchange.com"]]
     
     # pretrained classification models
-    nbsoac = load("models/10k_so_ac_bayes_model.joblib")
-    nbsose = load("models/10k_so_se_bayes_model.joblib")
-    svmsoac = load("models/10k_so_ac_SVM_model.joblib")
-    svmsose = load("models/10k_so_se_SVM_model.joblib")
+    nbsoac = load("app/models/10k_so_ac_bayes_model.joblib")
+    nbsose = load("app/models/10k_so_se_bayes_model.joblib")
+    svmsoac = load("app/models/10k_so_ac_SVM_model.joblib")
+    svmsose = load("app/models/10k_so_se_SVM_model.joblib")
     
     learning_type = RadioButtonGroup(labels=["Bayes", "Support Vector Machine"], active=0)
     
@@ -54,6 +50,6 @@ def classification_tab():
     # Create a row layout
     layout = row(controls)
 
-    tab = Panel(child=layout, title='Classification')
+    tab = Panel(child=layout, title='Message Site Classification')
 
     return tab

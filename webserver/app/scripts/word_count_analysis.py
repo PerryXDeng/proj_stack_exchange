@@ -1,9 +1,8 @@
 from bokeh.layouts import column
-from bokeh.models import Panel, WidgetBox, Legend
-from bokeh.plotting import figure, show, curdoc
-from bokeh import palettes
+from bokeh.models import Panel, Legend
+from bokeh.plotting import figure
 import database
-
+from scripts import helper
 
 def word_count_tab():
     # def make_dataset():
@@ -20,7 +19,7 @@ def word_count_tab():
 
     def construct_data_frame(siteId, word):
         statement = "SELECT frequency, date FROM word_frequencies WHERE siteId=" + str(siteId) + " AND word='" + word \
-                    + "' AND date>='2008-09-01 00:00:00'" # + " ORDER BY date DESC"
+                    + "' AND date>='2008-09-01 00:00:00' ORDER BY date ASC"
         return database.query(statement)
 
     def construct_legend_name(siteId, word):
@@ -40,18 +39,15 @@ def word_count_tab():
             legends[i] = legend
         return series, legends
 
-    def generate_colors(n):
-        # cannot have n > 20
-        return palettes.Category20[n]
 
     def generate_plot(title, site_ids, words_list, emit_site_name=False):
         p = figure(x_axis_type="datetime", title=title, tools="wheel_zoom,reset", plot_width=1000)
         p.grid.grid_line_alpha = 0.3
-        p.xaxis.axis_label = 'Month'
-        p.yaxis.axis_label = 'Avg Occurrence/Post'
+        p.xaxis.axis_label = 'Time'
+        p.yaxis.axis_label = 'Monthly Avg Occurrence/Post'
         series, legends  = construct_data_frame_series(site_ids, words_list)
         n = len(words_list)
-        colors = generate_colors(n)
+        colors = helper.generate_colors(n)
         legend_items = []
         for i in range(n):
             x = series[i]['date']
@@ -69,19 +65,18 @@ def word_count_tab():
     sites = [156, 156, 156, 156, 156, 156]
     words = ["database", "science", "mining", "sql", "hadoop", "spark"]
 
-    sites_2 = [135, 135, 135, 135, 135]
-    words_2 = ["ai", "mining", "bayesian", "svm", "neural"]
+    sites_2 = [135, 135, 135]
+    words_2 = ["bayesian", "svm", "neural"]
 
     sites_3 = [73, 73, 73, 73]
     words_3 = ["hitler", "stalin", "mao", "trump"]
 
     p1 = generate_plot("Select Stackoverflow Buzzwords", sites, words, emit_site_name=True)
     p2 = generate_plot("Select Stats Stack Exchange Buzzwords", sites_2, words_2, emit_site_name=True)
-    p2 = generate_plot("Select History Stack Exchange Buzzwords", sites_3, words_3, emit_site_name=True)
+    p3 = generate_plot("Select History Stack Exchange Buzzwords", sites_3, words_3, emit_site_name=True)
 
-    # Create a row layout
-    layout = column(p1, p2)
+    layout = column(p1, p2, p3)
 
-    tab = Panel(child=layout, title='Buzzword Frequencies')
+    tab = Panel(child=layout, title='Buzzword Frequencies All Time')
 
     return tab
