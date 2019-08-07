@@ -1,5 +1,5 @@
 from bokeh import palettes
-from bokeh.models.widgets import CheckboxGroup
+from bokeh.models.widgets import CheckboxGroup, Div
 from bokeh.layouts import row
 import database
 
@@ -30,3 +30,6 @@ def generate_site_checkboxes(num_site_batches, default_selection):
     else:
       panel.children.append(check_box_column)
   return check_box_groups, panel, batch_size
+
+def loading_plot_placeholder():
+  return Div(text='<p style="font-size:50px;">⏳⌛Crunching Numbers, Please Wait⌛⏳</p>', height=500, width=1400)

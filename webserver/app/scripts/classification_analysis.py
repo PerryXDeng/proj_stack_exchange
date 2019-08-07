@@ -51,5 +51,5 @@ def classification_tab():
     layout = row(controls)
 
     tab = Panel(child=layout, title='Message Site Classification')
-
+    
     return tab
