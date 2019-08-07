@@ -35,7 +35,7 @@ def post_size_tab():
         p.grid.grid_line_alpha = 0.3
         p.xaxis.axis_label = 'Time'
         p.yaxis.axis_label = 'Number of Posted Characters, Hourly'
-        series, legends  = construct_data_frame_series(site_ids, sliding_window=0)
+        series, legends  = construct_data_frame_series(site_ids, sliding_window)
         n = len(site_ids)
         colors = helper.generate_colors(n)
         legend_items = []
