@@ -6,12 +6,14 @@ Implemented basic Bokeh tab template.
 Created analysis and visualizations for sentiment analysis.
 
 PERRY
-Created data file stucture processor.
-Setup bokeh.
+Setup GCP Database.
+Created data file structure processor.
+Setup Bokeh.
 Created visualizations and analysis for the word count and post size analyses.
+Created visualizations and analysis for sentiment analysis.
 
 SAM
 Created initial database models.
-Setup spark.
+Setup Spark.
 Created model for post classification.
 Created visualizations for post classification.
