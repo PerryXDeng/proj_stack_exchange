@@ -62,19 +62,19 @@ def word_count_tab():
         p.add_layout(Legend(items=legend_items, location="center"), "right")
         return p
 
-    sites_1 = [156, 156, 156, 156, 156, 156]
-    words_2 = ["database", "science", "mining", "sql", "hadoop", "spark"]
+    words_1 = ["database", "sql", "mongodb", "hadoop", "spark", "security", "science"]
+    sites_1 = [156] * len(words_1)
 
-    sites_2 = [135, 135, 135]
     words_2 = ["bayesian", "svm", "neural"]
+    sites_2 = [135] * len(words_2)
 
-    sites_3 = [73, 73, 73, 73, 73, 73]
     words_3 = ["hitler", "stalin", "mao", "trump", "obama", "merkel"]
+    sites_3 = [73] * len(words_3)
 
-    sites_4 = [110, 110, 110, 110, 110, 110]
     words_4 = ["trump", "obama", "merkel"]
+    sites_4 = [110] * len(words_4)
 
-    p1 = generate_plot("Select Stackoverflow Buzzwords", sites_1, words_2, emit_site_name=True)
+    p1 = generate_plot("Select Stackoverflow Buzzwords", sites_1, words_1, emit_site_name=True)
     p2 = generate_plot("Select Stats Stack Exchange Buzzwords", sites_2, words_2, emit_site_name=True)
     p3 = generate_plot("Select History Stack Exchange Buzzwords", sites_3, words_3, emit_site_name=True)
     p4 = generate_plot("Select Politics Stack Exchange Buzzwords", sites_4, words_4, emit_site_name=True)
