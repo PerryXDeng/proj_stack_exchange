@@ -7,6 +7,7 @@ def about_tab():
 
   p = Div(text="""
                       Interactive Webapp Based on Stack Exchange Data Dump<br />
+                      Our Goals, Approach, and Findings: https://www.overleaf.com/read/xnpkrdbkztrx<br />
                       <br />
                       Interact with the Figures by Clicking on the Mouse Button to the Right of the Figure<br />
                       Then Scroll in/out on X/Y Axis to Modify Domain and Range of Data Displayed<br />
