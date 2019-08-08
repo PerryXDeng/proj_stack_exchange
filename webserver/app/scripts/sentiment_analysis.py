@@ -33,7 +33,8 @@ def construct_data_frame_series(sites, sliding_window=0):
 
 
 def generate_plot(title, site_ids, emit_site_name=False, sliding_window=0):
-    p = figure(x_axis_type="datetime", title=title, tools="wheel_zoom,reset", plot_width=1400)
+    p = figure(x_axis_type="datetime", title=title, tools=[], plot_width=1400)
+    helper.configure_plot_tools(p)
     p.grid.grid_line_alpha = 0.3
     p.xaxis.axis_label = 'Time'
     p.yaxis.axis_label = 'Average Sentiment, Hourly'

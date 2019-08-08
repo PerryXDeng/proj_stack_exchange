@@ -1,5 +1,6 @@
 from bokeh import palettes
 from bokeh.models.widgets import CheckboxGroup, Div
+from bokeh.models import WheelZoomTool, SaveTool, ResetTool
 from bokeh.layouts import row
 import database
 
@@ -31,5 +32,13 @@ def generate_site_checkboxes(num_site_batches, default_selection):
       panel.children.append(check_box_column)
   return check_box_groups, panel, batch_size
 
+
 def loading_plot_placeholder():
   return Div(text='<p style="font-size:50px;">⏳⌛Crunching Numbers, Please Wait⌛⏳</p>', height=500, width=1400)
+
+
+def configure_plot_tools(plot):
+  tools = [WheelZoomTool(dimensions = "width"), WheelZoomTool(dimensions = "height"),
+           SaveTool(), ResetTool()]
+  for tool in tools: plot.add_tools(tool)
+  plot.toolbar.active_scroll = tools[0]

@@ -3,7 +3,6 @@ from bokeh.models import Panel, Legend
 from bokeh.plotting import figure
 import database
 from scripts import helper
-from bokeh.io import curdoc
 
 
 def construct_data_frame(siteId, word):
@@ -32,17 +31,18 @@ def construct_data_frame_series(site_ids, words_list):
 
 
 def generate_plot(title, site_ids, words_list, emit_site_name=False):
-    p = figure(x_axis_type="datetime", title=title, tools="wheel_zoom,reset", plot_width=1400)
+    p = figure(x_axis_type="datetime", title=title, plot_width=1400, tools=[])
+    helper.configure_plot_tools(p)
     p.grid.grid_line_alpha = 0.3
-    p.xaxis.axis_label = 'Time'
-    p.yaxis.axis_label = 'Monthly Avg Occurrence/Post'
+    p.xaxis.axis_label = 'Months'
+    p.yaxis.axis_label = 'Avg Occurrences Per Thousand Posts'
     series, legends = construct_data_frame_series(site_ids, words_list)
     n = len(words_list)
     colors = helper.generate_colors(n)
     legend_items = []
     for i in range(n):
         x = series[i]['date']
-        y = series[i]['frequency']
+        y = series[i]['frequency'].values * 1000
         color = colors[i]
         line = p.line(x, y, color=color)
         squares = p.square(x, y, fill_color=None, line_color=color)

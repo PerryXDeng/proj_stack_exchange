@@ -33,7 +33,8 @@ def construct_data_frame_series(sites, sliding_window=0):
 
 
 def generate_plot(title, site_ids, emit_site_name=False, sliding_window=0):
-    p = figure(x_axis_type="datetime", title=title, tools="wheel_zoom,reset", plot_width=1400)
+    p = figure(x_axis_type="datetime", title=title, tools=[], plot_width=1400)
+    helper.configure_plot_tools(p)
     p.grid.grid_line_alpha = 0.3
     p.xaxis.axis_label = 'Time'
     p.yaxis.axis_label = 'Number of Posted Characters, Hourly'
@@ -72,22 +73,22 @@ class Traffic:
             col = self.check_box_groups[c]
             if len(col.active) > 0: # boxes checked
                 new_sites.extend([c*self.batch_size + x + 1 for x in col.active])
-        new_plot = generate_plot("Hourly Total Posting, Selected Sites", new_sites, emit_site_name=False)
         new_moving_average = generate_plot("Hourly Total Posting (Daily Moving Average), Selected Sites", new_sites,
                                            emit_site_name=False, sliding_window=24)
+        new_plot = generate_plot("Hourly Total Posting, Selected Sites", new_sites, emit_site_name=False)
         self.layout.children.pop()
         self.layout.children.pop()
-        self.layout.children.append(new_plot)
         self.layout.children.append(new_moving_average)
+        self.layout.children.append(new_plot)
 
     def load_plots(self):
         p0 = generate_plot("Hourly Total Posting, Stack Overflow", [156], emit_site_name=True)
         self.layout.children.pop(0)
         self.layout.children.insert(0, p0)
-        p3 = generate_plot("Hourly Total Posting, Selected Sites", self.default_selection, emit_site_name=False)
+        p3 = generate_plot("Hourly Total Posting (Daily Moving Average), Selected Sites", self.default_selection,
+                           emit_site_name=False, sliding_window=24)
         self.layout.children.pop(3)
         self.layout.children.insert(3, p3)
-        p4 = generate_plot("Hourly Total Posting (Daily Moving Average), Selected Sites", self.default_selection,
-                           emit_site_name=False, sliding_window=24)
+        p4 = generate_plot("Hourly Total Posting, Selected Sites", self.default_selection, emit_site_name=False)
         self.layout.children.pop(4)
         self.layout.children.insert(4, p4)
