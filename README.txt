@@ -3,7 +3,7 @@ EASY WAY
 #####################
 
 We have a pre-setup webpage for you to access if you would like here:
-http://pdeng.student.rit.edu
+https://pdeng.student.rit.edu
 
 If you do want to go through the setup process please continue below, otherwise enjoy!
 
