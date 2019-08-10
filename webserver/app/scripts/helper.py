@@ -1,6 +1,6 @@
 from bokeh import palettes
 from bokeh.models.widgets import CheckboxGroup, Div
-from bokeh.models import WheelZoomTool, SaveTool, ResetTool
+from bokeh.models import WheelZoomTool, SaveTool, ResetTool, Title
 from bokeh.layouts import row
 import database
 
@@ -37,8 +37,11 @@ def loading_plot_placeholder():
   return Div(text='<p style="font-size:50px;">⏳⌛Crunching Numbers, Please Wait⌛⏳</p>', height=500, width=1400)
 
 
-def configure_plot_tools(plot):
+def configure_plot(plot):
   tools = [WheelZoomTool(dimensions = "width"), WheelZoomTool(dimensions = "height"),
            SaveTool(), ResetTool()]
   for tool in tools: plot.add_tools(tool)
   plot.toolbar.active_scroll = tools[0]
+  plot.add_layout(Title(
+    text="interactively view the data at https://pdeng.student.rit.edu                                                                             data source: archive.org/details/stackexchange",
+    align="right"), "below")

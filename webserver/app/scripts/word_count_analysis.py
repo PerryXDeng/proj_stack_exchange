@@ -32,10 +32,10 @@ def construct_data_frame_series(site_ids, words_list):
 
 def generate_plot(title, site_ids, words_list, emit_site_name=False):
     p = figure(x_axis_type="datetime", title=title, plot_width=1400, tools=[])
-    helper.configure_plot_tools(p)
+    helper.configure_plot(p)
     p.grid.grid_line_alpha = 0.3
     p.xaxis.axis_label = 'Months'
-    p.yaxis.axis_label = 'Avg Occurrences Per Thousand Posts'
+    p.yaxis.axis_label = 'Avg Mentions Per Thousand Posts'
     series, legends = construct_data_frame_series(site_ids, words_list)
     n = len(words_list)
     colors = helper.generate_colors(n)
@@ -56,27 +56,37 @@ def generate_plot(title, site_ids, words_list, emit_site_name=False):
 
 class Buzzwords:
     def __init__(self):
-        self.words_1 = ["database", "sql", "mongodb", "hadoop", "spark", "security", "science"]
+        self.words_1 = ["database", "sql", "mongodb", "hadoop", "spark", "ajax", "javascript", "python", "scala", "rust"]
         self.sites_1 = [156] * len(self.words_1)
-        self.words_2 = ["bayesian", "svm", "neural"]
-        self.sites_2 = [135] * len(self.words_2)
-        self.words_3 = ["trump", "obama", "merkel"]
-        self.sites_3 = [110] * len(self.words_3)
-        self.layout = column(helper.loading_plot_placeholder(), helper.loading_plot_placeholder(), helper.loading_plot_placeholder())
+        self.words_2 = ["security", "cloud", "devops", "scalable", "workflow", "science", "blockchain", "matlab", "tensorflow", "pytorch"]
+        self.sites_2 = [156] * len(self.words_2)
+        self.words_5 = ["r", "java", "c"]
+        self.sites_5 = [156] * len(self.words_5)
+        self.words_3 = ["bayesian", "svm", "neural", "inference", "prediction", "p", "hypothesis", "bandit"]
+        self.sites_3 = [135] * len(self.words_3)
+        self.words_4 = ["trump", "obama", "merkel"]
+        self.sites_4 = [110] * len(self.words_4)
+        self.layout = column(helper.loading_plot_placeholder(), helper.loading_plot_placeholder(), helper.loading_plot_placeholder(), helper.loading_plot_placeholder(), helper.loading_plot_placeholder())
 
     def get_tab(self):
         return Panel(child=self.layout, title='Buzzword Frequencies All Time')
 
     def load_plots(self):
-        p0 = generate_plot("Select Stackoverflow Buzzwords", self.sites_1, self.words_1, emit_site_name=True)
+        p0 = generate_plot("Select StackOverflow Buzzwords", self.sites_1, self.words_1, emit_site_name=True)
         self.layout.children.pop()
         self.layout.children.insert(0, p0)
-        p1 = generate_plot("Select Stats Stack Exchange Buzzwords", self.sites_2, self.words_2, emit_site_name=True)
+        p1 = generate_plot("Select StackOverflow Buzzwords, Continued", self.sites_2, self.words_2, emit_site_name=True)
         self.layout.children.pop()
         self.layout.children.insert(1, p1)
-        p2 = generate_plot("Select Politics Stack Exchange Buzzwords", self.sites_3, self.words_3, emit_site_name=True)
+        p5 = generate_plot("Select StackOverflow Buzzwords, Final", self.sites_5, self.words_5, emit_site_name=True)
         self.layout.children.pop()
-        self.layout.children.insert(2, p2)
+        self.layout.children.insert(2, p5)
+        p2 = generate_plot("Select Stats Stack Exchange Buzzwords", self.sites_3, self.words_3, emit_site_name=True)
+        self.layout.children.pop()
+        self.layout.children.insert(3, p2)
+        p3 = generate_plot("Select Politics Stack Exchange Buzzwords", self.sites_4, self.words_4, emit_site_name=True)
+        self.layout.children.pop()
+        self.layout.children.insert(4, p3)
 
     def load_handler(self, attr, old, new):
         self.load_plots()
