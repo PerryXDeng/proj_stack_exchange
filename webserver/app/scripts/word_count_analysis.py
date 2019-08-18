@@ -62,7 +62,7 @@ class Buzzwords:
         self.sites_2 = [156] * len(self.words_2)
         self.words_5 = ["r", "java", "c"]
         self.sites_5 = [156] * len(self.words_5)
-        self.words_3 = ["bayesian", "svm", "neural", "inference", "prediction", "p", "hypothesis", "bandit"]
+        self.words_3 = ["bayesian", "svm", "neural", "inference", "prediction", "hypothesis", "bandit"]
         self.sites_3 = [135] * len(self.words_3)
         self.words_4 = ["trump", "obama", "merkel"]
         self.sites_4 = [110] * len(self.words_4)

@@ -11,19 +11,19 @@ from scripts.about import about_tab
 
 
 # Create each of the tabs
-tab1 = classification_tab()
+class_tab = classification_tab()
 
 buzz = Buzzwords()
-tab2 = buzz.get_tab()
+buzzwords_tab = buzz.get_tab()
 sent = Sentiment()
-tab3 = sent.get_tab()
+sentiment_tab = sent.get_tab()
 posting = Traffic()
-tab4 = posting.get_tab()
+traffic_tab = posting.get_tab()
 
 tab5 = about_tab()
 
 # Put all the tabs into one application
-tabs = Tabs(tabs = [tab1, tab2, tab3, tab4, tab5])
+tabs = Tabs(tabs = [buzzwords_tab, sentiment_tab, traffic_tab, class_tab, tab5])
 
 def load_data_1():
   buzz.load_plots()
@@ -38,4 +38,4 @@ def load_data_3():
 
 # Put the tabs in the current document for display
 curdoc().add_root(tabs)
-curdoc().add_timeout_callback(load_data_1, 250)
+curdoc().add_timeout_callback(load_data_1, 550)
