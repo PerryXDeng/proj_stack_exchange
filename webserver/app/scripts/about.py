@@ -9,10 +9,10 @@ def about_tab():
                       Interact with the Figures by Scrolling in/out and Clicking Buttons on the Right<br />
                       Predict the Context of Your Posts by Typing Them into Textbox and Clicking Predict<br />
                       <br />
-                      Interactive Webapp Based on Stack Exchange Data Dump<br />
+                      Interactive Webapp Based on Stack Exchange Data Dump of 2019 Summer<br />
                       Contributors: Perry Deng xxd9704@rit.edu, Drew Barnes anb1852@rit.edu, Sam Snyder shs8139@rit.edu<br />
                       Our Goals, Approach, and Findings: <a href="https://www.overleaf.com/read/xnpkrdbkztrx">Overleaf</a><br />
-                      Current State: Active Development for Multiclass Context Prediction, Time Series Modeling<br />
+                      Current State: Development Discontinued<br />
                       Source: <a href="https://github.com/PerryXDeng/stack_exchange_text_mining">Github</a><br />
                       <br />
                       Data: 11 years of Posts from English Stack Exchange Sites<br />

@@ -56,11 +56,11 @@ def generate_plot(title, site_ids, words_list, emit_site_name=False):
 
 class Buzzwords:
     def __init__(self):
-        self.words_1 = ["database", "sql", "mongodb", "hadoop", "spark", "ajax", "javascript", "python", "scala", "rust"]
+        self.words_1 = ["database", "sql", "mongodb", "hadoop", "spark"]
         self.sites_1 = [156] * len(self.words_1)
-        self.words_2 = ["security", "cloud", "devops", "scalable", "workflow", "science", "blockchain", "matlab", "tensorflow", "pytorch"]
+        self.words_2 = ["security", "cloud", "devops", "scalable", "blockchain", "AI", "tensorflow", "pytorch"]
         self.sites_2 = [156] * len(self.words_2)
-        self.words_5 = ["r", "java", "c"]
+        self.words_5 = ["java", "c", "ajax", "javascript", "python", "scala", "rust", "matlab"]
         self.sites_5 = [156] * len(self.words_5)
         self.words_3 = ["bayesian", "svm", "neural", "inference", "prediction", "hypothesis", "bandit"]
         self.sites_3 = [135] * len(self.words_3)
@@ -72,13 +72,13 @@ class Buzzwords:
         return Panel(child=self.layout, title='Buzzword Frequencies All Time')
 
     def load_plots(self):
-        p0 = generate_plot("Select StackOverflow Buzzwords", self.sites_1, self.words_1, emit_site_name=True)
+        p0 = generate_plot("Select StackOverflow Buzzwords, Data Technologies", self.sites_1, self.words_1, emit_site_name=True)
         self.layout.children.pop()
         self.layout.children.insert(0, p0)
-        p1 = generate_plot("Select StackOverflow Buzzwords, Continued", self.sites_2, self.words_2, emit_site_name=True)
+        p1 = generate_plot("Select StackOverflow Buzzwords, Fads", self.sites_2, self.words_2, emit_site_name=True)
         self.layout.children.pop()
         self.layout.children.insert(1, p1)
-        p5 = generate_plot("Select StackOverflow Buzzwords, Final", self.sites_5, self.words_5, emit_site_name=True)
+        p5 = generate_plot("Select StackOverflow Buzzwords, Languages", self.sites_5, self.words_5, emit_site_name=True)
         self.layout.children.pop()
         self.layout.children.insert(2, p5)
         p2 = generate_plot("Select Stats Stack Exchange Buzzwords", self.sites_3, self.words_3, emit_site_name=True)

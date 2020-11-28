@@ -65,7 +65,7 @@ class Traffic:
         self.layout = column(helper.loading_plot_placeholder(), panel, update_button, helper.loading_plot_placeholder(), helper.loading_plot_placeholder())
 
     def get_tab(self):
-        return Panel(child=self.layout, title='Posting Traffic 2018.06-2019.06')
+        return Panel(child=self.layout, title='Hourly Posting Traffic')
 
     def update(self):
         new_sites = []
