@@ -681,7 +681,7 @@ summary {
 <p class="caption">Visualization of Stack Overflow Hourly Traffic around 2018.01.10; Interact the visualization on <a href="http://pdeng.student.rit.edu">my webapp</a></p>
 </div>
 </center>
-<p>Stack Overflow is a popular Q&amp;A site used by programmers to share and access knowledge, with over 14 million registered users, 21 million questions, and 31 million answers as of 2020 December <span class="citation">[1]</span>. They upload their data in XML format for public access on a regular basis, which are over 100 gigabytes. Over summer 2019 we reformatted the data into a structure SQL database suitable for data analysis, and extracted statistics regarding the use of their website. We utilized parallel map reduce algorithms to calculate the number of characters posted each hour, which serve as a good proxy variable for website traffic over time. We found wild periodic fluctuations in Stack Overflow traffic; for example, there is almost twice as much traffic in around noon on a weekday than there is in night time. This means that, if the website infrastructure is optimized to handle “peak load” performance, half of the infrastructure will not be utilized at night. To see the potential magnitude of this resource waste, we can look at another large website, Netflix, which is estimated to spend 25 millions USD per month on tech infrastructure <span class="citation">[3]</span>. If a website such as Stack Overflow can model and forecast the traffic fluctuations in advance, it might be able to dramatically reduce the cost currently spent on static infrastructure capacity <span class="citation">[2]</span>, and dynamically scale up its capacity using shared infrasture reserved in advance. In this report we provide an analysis on the time series, and compare several approaches for predicting hourly traffic months or years ahead. The approaches are based on conventional time series models, such as Autoregressive Integrated Moving Average (ARIMA) processes and fourier analysis. For readers’ convenience, we include the source code (a mix of R and Python) for reproducing the analysis, which can be optionally viewed by clicking on the “Code” button. This report is intended for audience with rudimentary knowledge in applied data analysis, and is light on the mathematical, statistical, and algorithmic details.</p>
+<p>Stack Overflow is a popular Q&amp;A site used by programmers to share and access knowledge, with over 14 million registered users, 21 million questions, and 31 million answers as of 2020 December <span class="citation">[1]</span>. We found wild periodic fluctuations in Stack Overflow traffic; for example, there is almost twice as much traffic in around noon on a weekday than there is in night time. This means that, if the website infrastructure is optimized to handle “peak load” performance, half of the infrastructure will not be utilized at night. To see the potential magnitude of this resource waste, we can look at another large website, Netflix, which is estimated to spend 25 millions USD per month on tech infrastructure <span class="citation">[3]</span>. If a website such as Stack Overflow can model and forecast the traffic fluctuations in advance, it might be able to dramatically reduce the cost currently spent on static infrastructure capacity <span class="citation">[2]</span>, and dynamically scale up its capacity using shared infrasture reserved in advance. In this report we provide an analysis on the time series, and compare several approaches for predicting hourly traffic months or years ahead. The approaches are based on conventional time series models, such as Autoregressive Integrated Moving Average (ARIMA) processes and fourier analysis. For readers’ convenience, we include the source code (a mix of R and Python) for reproducing the analysis, which can be optionally viewed by clicking on the “Code” button. This report is intended for audience with rudimentary knowledge in applied data analysis, and is light on the mathematical, statistical, and algorithmic details.</p>
 <pre class="r"><code># R
 # html output options with RMarkdown
 knitr::opts_chunk$set(echo = TRUE, message=FALSE, fig.align='center', results='hide', fig.width=6, fig.height=4)
@@ -691,8 +691,12 @@ use_python(&quot;/usr/bin/python3&quot;)
 matplotlib &lt;- import(&quot;matplotlib&quot;)
 matplotlib$use(&quot;Agg&quot;, force = TRUE)</code></pre>
 </div>
-<div id="time-series-analysis" class="section level1">
-<h1>Time Series Analysis</h1>
+<div id="data-collection" class="section level1">
+<h1>Data Collection</h1>
+<p>Stack Overflow regularly upload their data in XML format for public access, which are now over 100 gigabytes. Over summer 2019 we processed their data into structured form and stored them into a cloud database. We utilized parallel map reduce algorithms in PySpark to extract statistics from the data, particularly the number of characters posted each hour, which serve as a good proxy variable for website traffic over time. We stored the calculations in the database so that we can easily access it for data analysis. The source code for the data processing and map reduce algorithms are omitted from this document, but can be found in <a href="https://github.com/PerryXDeng/stack_exchange_text_mining">our github repository</a>. The remainder of this document focuses on the data analysis.</p>
+</div>
+<div id="data-analysis" class="section level1">
+<h1>Data Analysis</h1>
 <p>After data extraction and transformation, we have close to 100 thousand datapoints from August 2008 to June 2019, in the format seen below. “size” refers to the number of characters posted each hour, which is our proxy variable for hourly web traffic.</p>
 <pre class="python"><code># Python
 from matplotlib import pyplot as plt
@@ -968,8 +972,8 @@ print(f&quot;NRMSE: {nrmse}&quot;)</code></pre>
 </div>
 </div>
 </div>
-<div id="conclusion" class="section level1">
-<h1>Conclusion</h1>
+<div id="conclusions-and-recommendations" class="section level1">
+<h1>Conclusions and Recommendations</h1>
 </div>
 <div id="further-discussion" class="section level1">
 <h1>Further Discussion</h1>
