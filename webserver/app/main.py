@@ -23,7 +23,7 @@ traffic_tab = posting.get_tab()
 tab5 = about_tab()
 
 # Put all the tabs into one application
-tabs = Tabs(tabs = [buzzwords_tab, sentiment_tab, traffic_tab, class_tab, tab5])
+tabs = Tabs(tabs = [traffic_tab, buzzwords_tab, sentiment_tab, class_tab, tab5])
 
 def load_data_1():
   buzz.load_plots()
