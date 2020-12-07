@@ -2530,23 +2530,23 @@ Fourier (Filtered, Amplified, Phase-Realigned)
 <p>As we can see from the table above, the SARIMA models underperform in terms of predictive power, with much lower NRMSE. However their statistical properties are more robust, and the PICR is close to the ideal rate of 0.8. On the other hand, our ad-hoc fourier forecasting model has strong predictive power, but the statistical properties are less well understood. Thus its prediction intervals are further from the ideal distribution. For a website interested in forecasting site traffic, SARIMA models are not sufficient and lack ability to make accurate forecasts. Fourier series are able to capture more of the periodic fluctuations in hourly traffic, and a simple fourier approach can serve as a good starting point for making strong forecasts. On the other hand, the statistical properties of fourier extrapolations are less clear, which can hamstring some applications such as anomaly detection.</p>
 <p>To summarize, in the context of forecasting web traffic, the pros of SARIMA models are:</p>
 <ol style="list-style-type: decimal">
-<li>widely used for time series with well understood statistical properties</li>
+<li>they are widely used for time series with well understood statistical properties</li>
 </ol>
 <p>The cons of SARIMA models are:</p>
 <ol style="list-style-type: decimal">
-<li><p>slow to compute (at least in R) when the seasonal order is large</p></li>
-<li><p>bad forecasting power in the presence of multiple periodic patterns</p></li>
+<li><p>they are slow to compute (at least in R) when the seasonal order is large</p></li>
+<li><p>they are bad forecasting power in the presence of multiple periodic patterns</p></li>
 </ol>
 <p>The pros of the Fourier extrapolation models are:</p>
 <ol style="list-style-type: decimal">
-<li><p>its core algorithm, Fast Fourier Transform, is used by more than just statisticans and data scientists, and has existing implementations in many programming languages</p></li>
-<li><p>it is very fast to compute compared to SARIMA, and does not require searching through potential parameters</p></li>
-<li><p>it has surprisingly strong predictive power for periodic fluctuations</p></li>
+<li><p>their core algorithm, Fast Fourier Transform, is used by more than just statisticans and data scientists, and has existing implementations in many programming languages</p></li>
+<li><p>they are very fast to compute compared to SARIMA, and does not require searching through potential parameters</p></li>
+<li><p>they have surprisingly strong predictive power for periodic fluctuations</p></li>
 </ol>
 <p>The cons of the Fourier extrapolation models are:</p>
 <ol style="list-style-type: decimal">
-<li><p>it has less understood statistical properties</p></li>
-<li><p>it may require realignment of periodic phases, which can be very complicated</p></li>
+<li><p>they have less understood statistical properties</p></li>
+<li><p>they may require realignment of periodic phases, which can be very complicated</p></li>
 </ol>
 </div>
 <div id="further-discussion" class="section level1">
